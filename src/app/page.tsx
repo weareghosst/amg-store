@@ -139,7 +139,7 @@ export default async function HomePage() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-800">Novidades</h2>
           <Link
-            href="/produtos"
+            href={categoryHref("todos-produtos")}
             className="text-sm font-medium text-brand-blue hover:underline"
           >
             Ver todos →

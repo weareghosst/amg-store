@@ -29,18 +29,27 @@ export default async function CategoryPage({
   let productList: (typeof products.$inferSelect)[] = [];
   try {
     const db = getDb();
-    const [category] = await db
-      .select()
-      .from(categories)
-      .where(eq(categories.slug, slug))
-      .limit(1);
-    if (category) {
+    if (slug === "todos-produtos") {
       productList = await db
         .select()
         .from(products)
-        .where(and(eq(products.active, true), eq(products.categoryId, category.id)))
+        .where(eq(products.active, true))
         .orderBy(desc(products.createdAt))
         .limit(60);
+    } else {
+      const [category] = await db
+        .select()
+        .from(categories)
+        .where(eq(categories.slug, slug))
+        .limit(1);
+      if (category) {
+        productList = await db
+          .select()
+          .from(products)
+          .where(and(eq(products.active, true), eq(products.categoryId, category.id)))
+          .orderBy(desc(products.createdAt))
+          .limit(60);
+      }
     }
   } catch (err) {
     console.error(`[categorias/${slug}] banco indisponível:`, err);

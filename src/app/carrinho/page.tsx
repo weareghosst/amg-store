@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/cart/cart-context";
 import { formatBRL } from "@/lib/money";
+import { categoryHref } from "@/lib/category-pages";
 
 export default function CartPage() {
   const { items, ready, removeItem, setQuantity, subtotalCents } = useCart();
@@ -24,7 +25,7 @@ export default function CartPage() {
           Explore nossos produtos de limpeza e EPIs.
         </p>
         <Link
-          href="/produtos"
+          href={categoryHref("todos-produtos")}
           className="mt-6 inline-block rounded-lg bg-brand-blue px-6 py-3 font-semibold text-white transition hover:bg-brand-blue-dark"
         >
           Ver produtos
@@ -119,7 +120,7 @@ export default function CartPage() {
           Finalizar compra
         </Link>
         <Link
-          href="/produtos"
+          href={categoryHref("todos-produtos")}
           className="mt-2 block w-full rounded-lg px-6 py-2 text-center text-sm font-medium text-slate-500 hover:text-brand-blue"
         >
           Continuar comprando

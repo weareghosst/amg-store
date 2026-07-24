@@ -11,6 +11,12 @@ export type CategoryPageConfig = {
 };
 
 export const CATEGORY_PAGES: Record<string, CategoryPageConfig> = {
+  "limpeza-higiene": {
+    title: "Limpeza & Higiene",
+    tagline:
+      "Produtos para manter ambientes limpos, organizados e bem cuidados: químicos, descartáveis e itens para sua rotina.",
+    background: "/background-limpeza&higiene.png",
+  },
   epi: {
     title: "EPI",
     tagline:
@@ -22,6 +28,12 @@ export const CATEGORY_PAGES: Record<string, CategoryPageConfig> = {
     tagline:
       "Tudo para o tratamento e a manutenção da sua piscina: cloro, algicidas, clarificantes e acessórios.",
     background: "/background-piscina.png",
+  },
+  "todos-produtos": {
+    title: "Todos os produtos",
+    tagline:
+      "Encontre tudo o que sua empresa precisa em um só lugar: limpeza, higiene, EPIs, piscina e muito mais.",
+    background: "/background-todosprodutos.png",
   },
 };
 
