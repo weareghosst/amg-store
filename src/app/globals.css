@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
+/* Paleta extraída da logo AMG: azul royal metálico, azul marinho do
+   contorno e o verde vivo do swoosh/faixa "atacado | varejo". */
+@theme {
+  --color-brand-blue: #1746c8;
+  --color-brand-blue-dark: #0e2f95;
+  --color-brand-navy: #0a1f66;
+  --color-brand-green: #52a410;
+  --color-brand-green-dark: #3f800a;
+  --color-whatsapp: #25d366;
+  --color-whatsapp-dark: #1eb857;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -12,15 +24,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Flutuação suave da logo no hero */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
 }
