@@ -8,6 +8,89 @@ import { categories, products } from "@/db/schema";
 import { ProductCard } from "@/components/product-card";
 import { categoryHref } from "@/lib/category-pages";
 
+const DEMO_PRODUCTS = [
+  {
+    id: "demo-kit-limpeza",
+    name: "Kit Limpeza Premium",
+    slug: "kit-limpeza-premium",
+    description: "Conjunto elegante para limpeza diária com fragrância suave e alta performance.",
+    sku: "KIT-001",
+    priceCents: 12990,
+    comparePriceCents: 15990,
+    stock: 18,
+    categoryId: null,
+    imageUrl:
+      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80",
+    active: true,
+    weightGrams: 800,
+    widthCm: 20,
+    heightCm: 15,
+    lengthCm: 25,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: "demo-dispensador",
+    name: "Dispensador de Alvejante",
+    slug: "dispensador-de-alvejante",
+    description: "Prático, resistente e com ótimo rendimento para ambientes comerciais.",
+    sku: "DISP-002",
+    priceCents: 8990,
+    comparePriceCents: 10990,
+    stock: 12,
+    categoryId: null,
+    imageUrl:
+      "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=900&q=80",
+    active: true,
+    weightGrams: 650,
+    widthCm: 12,
+    heightCm: 28,
+    lengthCm: 10,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: "demo-luvas",
+    name: "Luvas de Proteção Nitrílica",
+    slug: "luvas-de-protecao-nitrilica",
+    description: "Proteção confortável para uso profissional com excelente aderência.",
+    sku: "EPI-003",
+    priceCents: 15990,
+    comparePriceCents: 18990,
+    stock: 24,
+    categoryId: null,
+    imageUrl:
+      "https://images.unsplash.com/photo-1612817159899-1f62b7c4f746?auto=format&fit=crop&w=900&q=80",
+    active: true,
+    weightGrams: 300,
+    widthCm: 10,
+    heightCm: 3,
+    lengthCm: 20,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: "demo-oculos",
+    name: "Óculos de Segurança Premium",
+    slug: "oculos-de-seguranca-premium",
+    description: "Design moderno, proteção confiável e conforto ideal para o dia todo.",
+    sku: "EPI-004",
+    priceCents: 24990,
+    comparePriceCents: 28990,
+    stock: 10,
+    categoryId: null,
+    imageUrl:
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+    active: true,
+    weightGrams: 220,
+    widthCm: 16,
+    heightCm: 5,
+    lengthCm: 16,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
+
 export const dynamic = "force-dynamic";
 
 const hasTopoBg = existsSync(path.join(process.cwd(), "public", "background-topo.png"));
@@ -28,10 +111,11 @@ export default async function HomePage() {
       db.select().from(categories).orderBy(categories.position).limit(8),
     ]);
   } catch (err) {
-    // Banco ainda não configurado (ex.: primeiro run sem .env) — a home
-    // continua no ar com o aviso de catálogo vazio em vez de derrubar o site.
     console.error("[home] banco indisponível:", err);
   }
+
+  const shouldUseDemoProducts = featured.length === 0;
+  const visibleFeatured = shouldUseDemoProducts ? DEMO_PRODUCTS : featured;
 
   return (
     <div className="overflow-x-hidden">
@@ -181,13 +265,13 @@ export default async function HomePage() {
             Ver todos →
           </Link>
         </div>
-        {featured.length === 0 ? (
+        {visibleFeatured.length === 0 ? (
           <p className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">
             Nenhum produto cadastrado ainda. Acesse o painel admin para começar.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {featured.map((p) => (
+            {visibleFeatured.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
