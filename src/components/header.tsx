@@ -26,9 +26,9 @@ export async function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2">
-        <Link href="/" className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-2.5 sm:gap-4">
+        <Link href="/" className="flex items-center gap-3 transition-transform duration-300 hover:-translate-y-0.5">
           {hasLogo ? (
             <Image
               src="/logo-header.png"
@@ -53,20 +53,20 @@ export async function Header() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex flex-wrap items-center justify-end gap-1.5">
           <CartBadge />
           {user ? (
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <Link
                 href="/conta"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
               >
                 Minha conta
               </Link>
               {user.role === "admin" && (
                 <Link
                   href="/admin"
-                  className="rounded-lg bg-brand-navy px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-blue-dark"
+                  className="rounded-lg bg-brand-navy px-3 py-2 text-sm font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-blue-dark"
                 >
                   Admin
                 </Link>
@@ -74,7 +74,7 @@ export async function Header() {
               <form action={logoutAction}>
                 <button
                   type="submit"
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition hover:bg-slate-100"
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-100"
                 >
                   Sair
                 </button>
@@ -83,7 +83,7 @@ export async function Header() {
           ) : (
             <Link
               href="/entrar"
-              className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-dark"
+              className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-blue-dark hover:shadow-lg"
             >
               Entrar
             </Link>
@@ -93,7 +93,7 @@ export async function Header() {
 
       {/* Barra de categorias */}
       <div className="bg-gradient-to-r from-brand-blue-dark to-brand-blue">
-        <nav className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-4">
+        <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-1 overflow-x-auto px-4 py-1">
           <Link
             href={categoryHref("todos-produtos")}
             className="whitespace-nowrap px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white"
@@ -104,7 +104,7 @@ export async function Header() {
             <Link
               key={c.slug}
               href={categoryHref(c.slug)}
-              className="whitespace-nowrap px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white"
+              className="whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold text-white/90 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white"
             >
               {c.label}
             </Link>

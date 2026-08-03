@@ -8,16 +8,16 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/produtos/${product.slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white transition hover:border-brand-blue/40 hover:shadow-md"
+      className="group card-hover flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] hover:border-brand-blue/40"
     >
-      <div className="relative aspect-square bg-slate-100">
+      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
         {product.imageUrl ? (
           <Image
             src={product.imageUrl}
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, 25vw"
-            className="object-cover transition group-hover:scale-105"
+            className="object-cover transition duration-500 motion-safe:group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-slate-300">
@@ -26,14 +26,18 @@ export function ProductCard({ product }: { product: Product }) {
             </svg>
           </div>
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-blue/10 via-transparent to-transparent opacity-0 transition duration-300 motion-safe:group-hover:opacity-100" />
         {outOfStock && (
           <span className="absolute left-2 top-2 rounded-full bg-slate-900/80 px-2.5 py-1 text-xs font-semibold text-white">
             Esgotado
           </span>
         )}
+        <span className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-blue shadow-sm opacity-0 transition duration-300 motion-safe:group-hover:opacity-100">
+          Ver mais
+        </span>
       </div>
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-2 text-sm font-medium text-slate-800">
+      <div className="flex flex-1 flex-col gap-1 p-3.5">
+        <h3 className="line-clamp-2 text-sm font-semibold text-slate-800 transition motion-safe:group-hover:text-brand-blue">
           {product.name}
         </h3>
         <div className="mt-auto pt-1">
