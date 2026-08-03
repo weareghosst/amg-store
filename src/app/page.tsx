@@ -91,6 +91,52 @@ const DEMO_PRODUCTS = [
   },
 ];
 
+const CATEGORY_DEMO_PRODUCTS: Record<string, typeof DEMO_PRODUCTS> = {
+  "limpeza-higiene": DEMO_PRODUCTS.slice(0, 2),
+  epi: DEMO_PRODUCTS.slice(2, 4),
+  piscina: [
+    {
+      ...DEMO_PRODUCTS[0],
+      id: "demo-piscina",
+      name: "Kit de Manutenção para Piscina",
+      slug: "kit-de-manutencao-para-piscina",
+      sku: "PISC-001",
+      priceCents: 32990,
+      comparePriceCents: 37990,
+      description: "Linha completa para limpeza, tratamento e cuidado diário da piscina.",
+      imageUrl:
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80",
+    },
+  ],
+  infantil: [
+    {
+      ...DEMO_PRODUCTS[0],
+      id: "demo-infantil",
+      name: "Cesta Organizadora Infantil",
+      slug: "cesta-organizadora-infantil",
+      sku: "INF-001",
+      priceCents: 15990,
+      comparePriceCents: 18990,
+      description: "Estilo divertido e funcional para organizar brinquedos e objetos do dia a dia.",
+      imageUrl:
+        "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=80",
+    },
+    {
+      ...DEMO_PRODUCTS[1],
+      id: "demo-higiene-infantil",
+      name: "Kit de Higiene Infantil",
+      slug: "kit-de-higiene-infantil",
+      sku: "INF-002",
+      priceCents: 13990,
+      comparePriceCents: 16990,
+      description: "Produtos suaves e práticos para cuidar da rotina da família com carinho.",
+      imageUrl:
+        "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80",
+    },
+  ],
+  "todos-produtos": DEMO_PRODUCTS,
+};
+
 export const dynamic = "force-dynamic";
 
 const hasTopoBg = existsSync(path.join(process.cwd(), "public", "background-topo.png"));
