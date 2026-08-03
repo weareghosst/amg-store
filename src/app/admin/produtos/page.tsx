@@ -9,13 +9,22 @@ export const metadata = { title: "Produtos — Admin" };
 
 export default async function AdminProductsPage() {
   await requireAdmin();
-  const db = getDb();
-  const rows = await db
-    .select({ product: products, category: categories })
-    .from(products)
-    .leftJoin(categories, eq(products.categoryId, categories.id))
-    .orderBy(desc(products.createdAt))
-    .limit(200);
+
+  let rows: Array<{ product: (typeof products.$inferSelect); category: (typeof categories.$inferSelect) | null }> = [];
+  let usingFallback = false;
+
+  try {
+    const db = getDb();
+    rows = await db
+      .select({ product: products, category: categories })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .orderBy(desc(products.createdAt))
+      .limit(200);
+  } catch (error) {
+    usingFallback = true;
+    console.warn("[admin/products] usando fallback:", error);
+  }
 
   return (
     <div>
@@ -28,6 +37,12 @@ export default async function AdminProductsPage() {
           + Novo produto
         </Link>
       </div>
+
+      {usingFallback && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Banco ainda não conectado. Esta tela está em modo de visualização.
+        </div>
+      )}
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">

@@ -57,7 +57,12 @@ export default async function CategoryPage({
 
   return (
     <div>
-      <CategoryHero title={page.title} tagline={page.tagline} background={page.background} />
+      <CategoryHero
+        title={page.title}
+        tagline={page.tagline}
+        background={page.background}
+        accent={page.accent}
+      />
 
       <div className="mx-auto max-w-6xl px-4 py-10">
         {productList.length === 0 ? (

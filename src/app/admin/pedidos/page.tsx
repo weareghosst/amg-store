@@ -27,17 +27,25 @@ export default async function AdminOrdersPage({
   const { status } = await searchParams;
   const validStatus = FILTERS.some((f) => f.value === status) ? status : "";
 
-  const db = getDb();
-  const statusFilter = validStatus
-    ? eq(orders.status, validStatus as "pending_payment")
-    : undefined;
-  const rows = await db
-    .select({ order: orders, customer: users })
-    .from(orders)
-    .innerJoin(users, eq(orders.userId, users.id))
-    .where(statusFilter)
-    .orderBy(desc(orders.createdAt))
-    .limit(200);
+  let rows: Array<{ order: (typeof orders.$inferSelect); customer: (typeof users.$inferSelect) }> = [];
+  let usingFallback = false;
+
+  try {
+    const db = getDb();
+    const statusFilter = validStatus
+      ? eq(orders.status, validStatus as "pending_payment")
+      : undefined;
+    rows = await db
+      .select({ order: orders, customer: users })
+      .from(orders)
+      .innerJoin(users, eq(orders.userId, users.id))
+      .where(statusFilter)
+      .orderBy(desc(orders.createdAt))
+      .limit(200);
+  } catch (error) {
+    usingFallback = true;
+    console.warn("[admin/orders] usando fallback:", error);
+  }
 
   return (
     <div>
@@ -58,6 +66,12 @@ export default async function AdminOrdersPage({
           </Link>
         ))}
       </div>
+
+      {usingFallback && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Banco ainda não conectado. Os pedidos serão exibidos em modo de visualização.
+        </div>
+      )}
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">

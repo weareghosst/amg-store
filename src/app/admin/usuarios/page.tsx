@@ -8,16 +8,31 @@ export const metadata = { title: "Usuários — Admin" };
 
 export default async function AdminUsersPage() {
   const admin = await requireAdmin();
-  const db = getDb();
-  const list = await db
-    .select()
-    .from(users)
-    .orderBy(desc(users.createdAt))
-    .limit(500);
+
+  let list: (typeof users.$inferSelect)[] = [];
+  let usingFallback = false;
+
+  try {
+    const db = getDb();
+    list = await db
+      .select()
+      .from(users)
+      .orderBy(desc(users.createdAt))
+      .limit(500);
+  } catch (error) {
+    usingFallback = true;
+    console.warn("[admin/users] usando fallback:", error);
+  }
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-800">Usuários</h1>
+      {usingFallback && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Banco ainda não conectado. A lista de usuários aparece em modo de visualização.
+        </div>
+      )}
+
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">

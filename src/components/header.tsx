@@ -15,6 +15,7 @@ const CATEGORY_LINKS = [
   { label: "Limpeza & Higiene", slug: "limpeza-higiene" },
   { label: "EPI", slug: "epi" },
   { label: "Piscina", slug: "piscina" },
+  { label: "Infantil", slug: "infantil" },
 ];
 
 export async function Header() {

@@ -10,24 +10,43 @@ export const metadata = { title: "Admin" };
 
 export default async function AdminDashboard() {
   await requireAdmin();
-  const db = getDb();
 
-  const [pendingCount, paidStats, lowStock, recentOrders] = await Promise.all([
-    db
-      .select({ value: count() })
-      .from(orders)
-      .where(eq(orders.status, "pending_payment")),
-    db
-      .select({ qty: count(), total: sum(orders.totalCents) })
-      .from(orders)
-      .where(eq(orders.status, "paid")),
-    db
-      .select()
-      .from(products)
-      .where(and(eq(products.active, true), lte(products.stock, 5)))
-      .limit(10),
-    db.select().from(orders).orderBy(desc(orders.createdAt)).limit(8),
-  ]);
+  let pendingCount = 0;
+  let paidQty = 0;
+  let paidTotal = 0;
+  let lowStock: (typeof products.$inferSelect)[] = [];
+  let recentOrders: (typeof orders.$inferSelect)[] = [];
+  let usingFallback = false;
+
+  try {
+    const db = getDb();
+
+    const [pendingResult, paidStats, lowStockResult, recentOrdersResult] = await Promise.all([
+      db
+        .select({ value: count() })
+        .from(orders)
+        .where(eq(orders.status, "pending_payment")),
+      db
+        .select({ qty: count(), total: sum(orders.totalCents) })
+        .from(orders)
+        .where(eq(orders.status, "paid")),
+      db
+        .select()
+        .from(products)
+        .where(and(eq(products.active, true), lte(products.stock, 5)))
+        .limit(10),
+      db.select().from(orders).orderBy(desc(orders.createdAt)).limit(8),
+    ]);
+
+    pendingCount = pendingResult[0]?.value ?? 0;
+    paidQty = paidStats[0]?.qty ?? 0;
+    paidTotal = Number(paidStats[0]?.total ?? 0);
+    lowStock = lowStockResult;
+    recentOrders = recentOrdersResult;
+  } catch (error) {
+    usingFallback = true;
+    console.warn("[admin] usando dados de fallback porque o banco não está disponível:", error);
+  }
 
   return (
     <div>
@@ -36,17 +55,13 @@ export default async function AdminDashboard() {
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-500">Aguardando pagamento</p>
-          <p className="mt-1 text-3xl font-black text-amber-600">
-            {pendingCount[0]?.value ?? 0}
-          </p>
+          <p className="mt-1 text-3xl font-black text-amber-600">{pendingCount}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-500">Pedidos pagos (a processar)</p>
-          <p className="mt-1 text-3xl font-black text-emerald-600">
-            {paidStats[0]?.qty ?? 0}
-          </p>
+          <p className="mt-1 text-3xl font-black text-emerald-600">{paidQty}</p>
           <p className="text-xs text-slate-400">
-            {formatBRL(Number(paidStats[0]?.total ?? 0))} em vendas
+            {formatBRL(paidTotal)} em vendas
           </p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -54,6 +69,12 @@ export default async function AdminDashboard() {
           <p className="mt-1 text-3xl font-black text-red-600">{lowStock.length}</p>
         </div>
       </div>
+
+      {usingFallback && (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Banco ainda não conectado. A página do admin está abrindo em modo de visualização de desenvolvimento.
+        </div>
+      )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section className="rounded-xl border border-slate-200 bg-white p-5">

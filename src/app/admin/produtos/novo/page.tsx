@@ -7,8 +7,14 @@ export const metadata = { title: "Novo produto — Admin" };
 
 export default async function NewProductPage() {
   await requireAdmin();
-  const db = getDb();
-  const categoryList = await db.select().from(categories).orderBy(categories.position);
+
+  let categoryList: (typeof categories.$inferSelect)[] = [];
+  try {
+    const db = getDb();
+    categoryList = await db.select().from(categories).orderBy(categories.position);
+  } catch (error) {
+    console.warn("[admin/new-product] usando fallback:", error);
+  }
 
   return (
     <div>

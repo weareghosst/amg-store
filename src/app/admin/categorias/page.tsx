@@ -7,12 +7,26 @@ export const metadata = { title: "Categorias — Admin" };
 
 export default async function AdminCategoriesPage() {
   await requireAdmin();
-  const db = getDb();
-  const list = await db.select().from(categories).orderBy(categories.position);
+
+  let list: (typeof categories.$inferSelect)[] = [];
+  let usingFallback = false;
+
+  try {
+    const db = getDb();
+    list = await db.select().from(categories).orderBy(categories.position);
+  } catch (error) {
+    usingFallback = true;
+    console.warn("[admin/categories] usando fallback:", error);
+  }
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-800">Categorias</h1>
+      {usingFallback && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          Banco ainda não conectado. As categorias aparecem em modo de visualização.
+        </div>
+      )}
       <CategoryManager
         categories={list.map((c) => ({
           id: c.id,

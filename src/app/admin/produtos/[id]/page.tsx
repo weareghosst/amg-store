@@ -22,12 +22,21 @@ export default async function EditProductPage({
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const db = getDb();
-  const [rows, categoryList] = await Promise.all([
-    db.select().from(products).where(eq(products.id, id)).limit(1),
-    db.select().from(categories).orderBy(categories.position),
-  ]);
-  const product = rows[0];
+  let product: (typeof products.$inferSelect) | undefined;
+  let categoryList: (typeof categories.$inferSelect)[] = [];
+
+  try {
+    const db = getDb();
+    const [rows, categoriesResult] = await Promise.all([
+      db.select().from(products).where(eq(products.id, id)).limit(1),
+      db.select().from(categories).orderBy(categories.position),
+    ]);
+    product = rows[0];
+    categoryList = categoriesResult;
+  } catch (error) {
+    console.warn("[admin/edit-product] usando fallback:", error);
+  }
+
   if (!product) notFound();
 
   return (

@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/admin") && process.env.NODE_ENV === "production") {
     const hasSession = req.cookies.has("amg_session");
     if (!hasSession) {
       const url = req.nextUrl.clone();

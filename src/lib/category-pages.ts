@@ -8,6 +8,13 @@ export type CategoryPageConfig = {
   title: string;
   tagline: string;
   background: string;
+  accent?: {
+    from: string;
+    via: string;
+    to: string;
+    textClass: string;
+    mutedTextClass: string;
+  };
 };
 
 export const CATEGORY_PAGES: Record<string, CategoryPageConfig> = {
@@ -28,6 +35,19 @@ export const CATEGORY_PAGES: Record<string, CategoryPageConfig> = {
     tagline:
       "Tudo para o tratamento e a manutenção da sua piscina: cloro, algicidas, clarificantes e acessórios.",
     background: "/background-piscina.png",
+  },
+  infantil: {
+    title: "Infantil",
+    tagline:
+      "Produtos divertidos e práticos para o dia a dia das crianças, com qualidade e conforto para a família.",
+    background: "/background-infantil.png",
+    accent: {
+      from: "#f472b6",
+      via: "#f9a8d4",
+      to: "#fdf2f8",
+      textClass: "text-pink-50",
+      mutedTextClass: "text-pink-100/90",
+    },
   },
   "todos-produtos": {
     title: "Todos os produtos",
