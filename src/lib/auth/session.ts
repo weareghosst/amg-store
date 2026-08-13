@@ -9,12 +9,18 @@ import { cache } from "react";
 const SESSION_COOKIE = "amg_session";
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 30; // 30 dias
 const RENEW_THRESHOLD_MS = 1000 * 60 * 60 * 24 * 15; // renova se faltar < 15 dias
-const TEMP_ADMIN_TOKEN = process.env.TEMP_ADMIN_SESSION_TOKEN ?? "amg-temp-admin-demo";
+
+// Token mágico reconocido como admin temporário apenas em ambiente não-produção
+// e somente se a env var TEMP_ADMIN_SESSION_TOKEN estiver definida (sem valor padrão).
+const TEMP_ADMIN_TOKEN =
+  process.env.NODE_ENV !== "production"
+    ? process.env.TEMP_ADMIN_SESSION_TOKEN ?? null
+    : null;
 
 function getTemporaryAdminUser(): User {
   return {
     id: "temp-admin",
-    email: process.env.TEMP_ADMIN_EMAIL ?? "demo.admin@amg.local",
+    email: process.env.TEMP_ADMIN_EMAIL ?? "temp-admin@amg.local",
     passwordHash: "",
     name: process.env.TEMP_ADMIN_NAME ?? "Admin temporário",
     phone: null,
@@ -75,6 +81,11 @@ export async function destroySession(): Promise<void> {
 }
 
 export async function createTemporaryAdminSession(): Promise<void> {
+  if (!TEMP_ADMIN_TOKEN) {
+    throw new Error(
+      "Admin temporário não configurado. Defina TEMP_ADMIN_SESSION_TOKEN em .env (desenvolvimento apenas).",
+    );
+  }
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, TEMP_ADMIN_TOKEN, {
     httpOnly: true,
@@ -100,7 +111,8 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
-  if (token === TEMP_ADMIN_TOKEN) {
+  // Atalho de admin temporário: ativo apenas fora de produção com token configurado.
+  if (TEMP_ADMIN_TOKEN && token === TEMP_ADMIN_TOKEN) {
     return getTemporaryAdminUser();
   }
 

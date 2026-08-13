@@ -23,7 +23,10 @@ export default async function LoginPage({
         Acesse sua conta para acompanhar pedidos.
       </p>
       <Suspense>
-        <LoginForm next={typeof next === "string" ? next : undefined} />
+        <LoginForm
+          next={typeof next === "string" ? next : undefined}
+          showDemoCreds={process.env.NODE_ENV !== "production"}
+        />
       </Suspense>
     </div>
   );

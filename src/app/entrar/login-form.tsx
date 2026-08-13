@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { loginAction, type AuthFormState } from "@/actions/auth";
 import { FormMessage, SubmitButton, inputClass, labelClass } from "@/components/forms";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({ next, showDemoCreds }: { next?: string; showDemoCreds?: boolean }) {
   const [state, formAction] = useActionState<AuthFormState, FormData>(
     loginAction,
     {},
@@ -41,15 +41,17 @@ export function LoginForm({ next }: { next?: string }) {
         />
       </div>
       <FormMessage error={state.error} />
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-        <p className="font-semibold">Acesso temporário para a cliente</p>
-        <p className="mt-1">
-          E-mail: <span className="font-mono">demo.admin@amg.local</span>
-        </p>
-        <p>
-          Senha: <span className="font-mono">AmgDemo2026!</span>
-        </p>
-      </div>
+      {showDemoCreds && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <p className="font-semibold">Acesso temporário para a cliente</p>
+          <p className="mt-1">
+            Credenciais definidas nas env vars{" "}
+            <span className="font-mono">TEMP_ADMIN_EMAIL</span> e{" "}
+            <span className="font-mono">TEMP_ADMIN_PASSWORD</span>. (Aparece apenas
+            fora de produção.)
+          </p>
+        </div>
+      )}
       <SubmitButton pendingText="Entrando...">Entrar</SubmitButton>
       <p className="text-center text-sm text-slate-500">
         Não tem conta?{" "}

@@ -100,13 +100,28 @@ export async function loginAction(
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
   const { email, password } = parsed.data;
-  const tempAdminEmail = process.env.TEMP_ADMIN_EMAIL ?? "demo.admin@amg.local";
-  const tempAdminPassword = process.env.TEMP_ADMIN_PASSWORD ?? "AmgDemo2026!";
 
-  if (email === tempAdminEmail && password === tempAdminPassword) {
-    await createTemporaryAdminSession();
-    await audit({ action: "user.login", detail: { email, source: "temporary-admin" }, ip });
-    redirect(safeNextPath(formData.get("next")));
+  // Atalho de admin temporário: disponível SOMENTE fora de produção e exige
+  // que as env vars TEMP_ADMIN_EMAIL / TEMP_ADMIN_PASSWORD estejam definidas.
+  // Sem as env vars, o caminho fica totalmente desativado (nenhum fallback).
+  if (process.env.NODE_ENV !== "production") {
+    const tempAdminEmail = process.env.TEMP_ADMIN_EMAIL;
+    const tempAdminPassword = process.env.TEMP_ADMIN_PASSWORD;
+    if (
+      tempAdminEmail &&
+      tempAdminPassword &&
+      process.env.TEMP_ADMIN_SESSION_TOKEN &&
+      email === tempAdminEmail &&
+      password === tempAdminPassword
+    ) {
+      await createTemporaryAdminSession();
+      await audit({
+        action: "user.login",
+        detail: { email, source: "temporary-admin" },
+        ip,
+      });
+      redirect(safeNextPath(formData.get("next")));
+    }
   }
 
   // Limita por IP e também por conta-alvo (protege contra força bruta distribuída no mesmo alvo)
