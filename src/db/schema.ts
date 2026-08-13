@@ -60,6 +60,26 @@ export const sessions = pgTable(
   (t) => [index("sessions_user_idx").on(t.userId)],
 );
 
+// Tokens de redefinição de senha: mesmo padrão das sessões (só guarda o hash
+// SHA-256). Single-use com janela curta de 15 minutos. Um usuário pode ter
+// vários tokens pendentes (cada pedido cria um novo), mas ao redefinir a senha
+// TODOS são marcados como usados para invalidar links antigos.
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    ip: text("ip"),
+  },
+  (t) => [index("password_resets_user_idx").on(t.userId)],
+);
+
 export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),

@@ -54,6 +54,12 @@ export function LoginForm({ next, showDemoCreds }: { next?: string; showDemoCred
       )}
       <SubmitButton pendingText="Entrando...">Entrar</SubmitButton>
       <p className="text-center text-sm text-slate-500">
+        Esqueceu a senha?{" "}
+        <Link href="/recuperar-senha" className="font-medium text-brand-blue hover:underline">
+          Recuperar
+        </Link>
+      </p>
+      <p className="text-center text-sm text-slate-500">
         Não tem conta?{" "}
         <Link href="/cadastro" className="font-medium text-brand-blue hover:underline">
           Cadastre-se

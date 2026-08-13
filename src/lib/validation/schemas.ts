@@ -38,6 +38,15 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Informe a senha.").max(128),
 });
 
+export const requestPasswordResetSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token ausente.").max(256),
+  password: passwordSchema,
+});
+
 export const addressSchema = z.object({
   label: z.string().trim().max(40).optional().or(z.literal("")),
   cep: z
