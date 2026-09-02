@@ -1,28 +1,30 @@
-import { NextResponse } from "next/server";
 import {
   CAPTCHA_COOKIE,
   CAPTCHA_TTL_SECONDS,
-  generateCaptcha,
+  generateCaptchaText,
   hashCaptchaAnswer,
+  renderCaptchaSvg,
 } from "@/lib/captcha";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Gera um desafio de captcha. Retorna a pergunta ao cliente e guarda o hash
- * da resposta esperada num cookie httpOnly de uso único.
+ * Gera a imagem do CAPTCHA. Devolve um SVG com o código e guarda o hash da
+ * resposta esperada num cookie httpOnly de uso único.
  */
 export async function GET() {
-  const { question, answer } = generateCaptcha();
+  const text = generateCaptchaText();
 
-  const res = NextResponse.json({ question });
-  res.cookies.set(CAPTCHA_COOKIE, hashCaptchaAnswer(String(answer)), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: CAPTCHA_TTL_SECONDS,
-    secure: process.env.NODE_ENV === "production",
+  const res = new Response(renderCaptchaSvg(text), {
+    headers: {
+      "Content-Type": "image/svg+xml",
+      "Cache-Control": "no-store",
+    },
   });
+  res.headers.append(
+    "Set-Cookie",
+    `${CAPTCHA_COOKIE}=${hashCaptchaAnswer(text)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${CAPTCHA_TTL_SECONDS}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
+  );
   return res;
 }
