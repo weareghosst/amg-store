@@ -61,8 +61,7 @@ export async function Footer() {
               </p>
               <p className="mt-3 max-w-lg text-sm text-white/75">
                 Atacado e varejo em produtos de limpeza, higiene, EPIs e
-                piscina. Entrega própria em São Paulo e envio para todo o
-                Brasil.
+                piscina. Entrega própria em São Paulo e retirada na loja.
               </p>
             </div>
           </div>

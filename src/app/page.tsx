@@ -151,7 +151,7 @@ export default async function HomePage() {
             </h1>
             <p className="mt-4 max-w-xl text-lg text-white/85">
               Mais praticidade, mais economia, mais qualidade pra você! Entrega
-              própria em São Paulo e envio para todo o Brasil.
+              própria em São Paulo e retirada na loja.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
               <Link
@@ -298,7 +298,7 @@ export default async function HomePage() {
               <div>
                 <h3 className="font-bold text-brand-navy">Agilidade que entrega</h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Entrega própria em SP e envio para todo o Brasil, com
+                  Entrega própria em SP e retirada na loja, com
                   atendimento e vendas pelo WhatsApp.
                 </p>
               </div>

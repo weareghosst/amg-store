@@ -53,8 +53,8 @@ export default function SobrePage() {
             Onde estamos
           </h2>
           <p className="mt-3">
-            Fazemos entrega própria em São Paulo e enviamos para todo o Brasil.
-            Também atendemos retirada na loja para quem preferir.
+            Só entrega própria em São Paulo (ainda não enviamos para outros
+            estados). Também atendemos retirada na loja para quem preferir.
           </p>
         </section>
       </div>

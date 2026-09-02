@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | AMG",
   },
   description:
-    "Produtos de limpeza profissional e EPIs com entrega própria em São Paulo e envio para todo o Brasil.",
+    "Produtos de limpeza profissional e EPIs com entrega própria em São Paulo e retirada na loja.",
 };
 
 export default function RootLayout({

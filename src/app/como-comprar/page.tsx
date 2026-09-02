@@ -57,8 +57,8 @@ export default async function ComoComprarPage() {
               e formas de pagamento.
             </li>
             <li>
-              <strong>Combine a entrega</strong> — entregamos em São Paulo e
-              enviamos para todo o Brasil.
+              <strong>Combine a entrega</strong> — fazemos entrega própria em
+              São Paulo e retirada na loja.
             </li>
           </ol>
         </section>
