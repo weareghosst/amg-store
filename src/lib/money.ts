@@ -5,7 +5,7 @@ export function formatBRL(cents: number): string {
   });
 }
 
-/** Converte centavos para o formato decimal aceito pela API do Asaas (reais). */
+/** Converte centavos para o formato decimal em reais. */
 export function centsToReais(cents: number): number {
   return Math.round(cents) / 100;
 }

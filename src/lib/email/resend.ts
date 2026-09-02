@@ -1,15 +1,15 @@
 import "server-only";
 
 /**
- * Cliente HTTP da Resend (https://resend.com) — usado para e-mails
- * transacionais (reset de senha, confirmação de pedido, status, etc.).
+ * Cliente HTTP da Resend (https://resend.com) — usado para o e-mail
+ * transacional de redefinição de senha.
  *
  * Decidimos não depender do SDK npm `resend` para não aumentar o bundle nem
  * arriscar build em ambientes sem npm install. A API REST é trivial.
  *
- * Segue o mesmo padrão defensivo do Asaas: se a env var não estiver
- * configurada, `isResendConfigured()` retorna false e quem chama decide o
- * que fazer (logar no console em dev, falhar em silencioso em prod...).
+ * Padrão defensivo: se a env var não estiver configurada,
+ * `isResendConfigured()` retorna false e quem chama decide o que fazer
+ * (logar no console em dev, falhar em silencio em prod...).
  */
 
 const RESEND_BASE_URL = "https://api.resend.com";
