@@ -56,7 +56,7 @@ export function renderCaptchaSvg(text: string): string {
     const x2 = x1 + (Math.random() - 0.5) * 90;
     const y2 = y1 + (Math.random() - 0.5) * 60;
     const stroke = `rgba(15,23,42,${(0.1 + Math.random() * 0.25).toFixed(2)})`;
-    noise += `<line x1="${x1.toFixed(0)}" y1="${y1.toFixed(0)}" x2="${x2.toFixed(0)}" y2="${y2.toFixed(0)}" stroke="${stroke}" stroke-width="1"/>`;
+    noise += `<line x1='${x1.toFixed(0)}' y1='${y1.toFixed(0)}' x2='${x2.toFixed(0)}' y2='${y2.toFixed(0)}' stroke='${stroke}' stroke-width='1'/>`;
   }
 
   // Pontos de ruído.
@@ -67,7 +67,7 @@ export function renderCaptchaSvg(text: string): string {
     const dy = (Math.random() * h).toFixed(0);
     const r = (Math.random() * 1.4 + 0.4).toFixed(1);
     const fill = `rgba(15,23,42,${(0.12 + Math.random() * 0.3).toFixed(2)})`;
-    dots += `<circle cx="${dx}" cy="${dy}" r="${r}" fill="${fill}"/>`;
+    dots += `<circle cx='${dx}' cy='${dy}' r='${r}' fill='${fill}'/>`;
   }
 
   // Letras individuais com rotação e deslocamento vertical aleatórios.
@@ -80,17 +80,10 @@ export function renderCaptchaSvg(text: string): string {
     const rot = clamp((Math.random() * 2 - 1) * 26, -26, 26).toFixed(1);
     const fontSize = (30 + Math.random() * 5).toFixed(1);
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    letters += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-family="monospace" font-size="${fontSize}" font-weight="bold" fill="${color}" transform="rotate(${rot} ${x.toFixed(1)} ${y.toFixed(1)})" text-anchor="middle">${ch}</text>`;
+    letters += `<text x='${x.toFixed(1)}' y='${y.toFixed(1)}' font-family='monospace' font-size='${fontSize}' font-weight='bold' fill='${color}' transform='rotate(${rot} ${x.toFixed(1)} ${y.toFixed(1)})' text-anchor='middle'>${ch}</text>`;
   }
 
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="codigo de verificacao">` +
-    `<rect width="${w}" height="${h}" fill="#f1f5f9"/>` +
-    noise +
-    dots +
-    letters +
-    `</svg>`
-  );
+  return `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}' role='img' aria-label='codigo de verificacao'><rect width='${w}' height='${h}' fill='#f1f5f9'/>${noise}${dots}${letters}</svg>`;
 }
 
 function safeEqualHex(a: string, b: string): boolean {
