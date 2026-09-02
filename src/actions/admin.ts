@@ -21,13 +21,42 @@ export interface AdminActionState {
   success?: string;
 }
 
+/** Tamanho máximo (bytes) de uma imagem enviada do computador. */
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2MB
+const IMAGE_MIME = /^data:image\/(png|jpe?g|webp);base64,/;
+
+/**
+ * Extrai e valida a imagem enviada do computador (data URI base64) a partir
+ * do campo `imageUpload`. Retorna o data URI pronto, ou uma string vazia se
+ * nenhum arquivo foi enviado.
+ */
+function parseImageUpload(formData: FormData): { url: string } | { error: string } {
+  const raw = String(formData.get("imageUpload") ?? "");
+  if (!raw) return { url: "" };
+
+  const mimeMatch = raw.match(IMAGE_MIME);
+  if (!mimeMatch) return { error: "Formato de imagem inválido (use PNG, JPG ou WebP)." };
+  if (raw.length > MAX_IMAGE_BYTES * 1.37 + 64) {
+    return { error: "Imagem muito grande (máx. 2MB). Reduza e tente novamente." };
+  }
+  return { url: raw };
+}
+
 // ---------- Produtos ----------
 
-function parseProductForm(formData: FormData) {
+function parseProductForm(
+  formData: FormData,
+): { error: string } | { data: z.infer<typeof productFormSchema> } {
   const price = parseReaisToCents(String(formData.get("price") ?? ""));
   const compareRaw = String(formData.get("comparePrice") ?? "").trim();
   const comparePrice = compareRaw === "" ? null : parseReaisToCents(compareRaw);
-  return productFormSchema.safeParse({
+  const uploaded = parseImageUpload(formData);
+  if ("error" in uploaded) return { error: uploaded.error };
+  const imageUrl =
+    uploaded.url !== ""
+      ? uploaded.url
+      : String(formData.get("imageUrl") ?? "");
+  const parsed = productFormSchema.safeParse({
     name: formData.get("name") ?? "",
     slug: formData.get("slug") ?? "",
     description: formData.get("description") ?? "",
@@ -36,9 +65,11 @@ function parseProductForm(formData: FormData) {
     comparePriceCents: comparePrice,
     stock: Number(formData.get("stock") ?? -1),
     categoryId: String(formData.get("categoryId") ?? "") || null,
-    imageUrl: formData.get("imageUrl") ?? "",
+    imageUrl,
     active: formData.get("active") === "on",
   });
+  if (!parsed.success) return { error: firstZodError(parsed.error) };
+  return { data: parsed.data };
 }
 
 export async function createProductAction(
@@ -47,7 +78,7 @@ export async function createProductAction(
 ): Promise<AdminActionState> {
   const admin = await assertAdmin();
   const parsed = parseProductForm(formData);
-  if (!parsed.success) return { error: firstZodError(parsed.error) };
+  if ("error" in parsed) return { error: parsed.error };
 
   const db = getDb();
   const existing = await db
@@ -87,7 +118,7 @@ export async function updateProductAction(
   const idParsed = z.uuid().safeParse(formData.get("id"));
   if (!idParsed.success) return { error: "Produto inválido." };
   const parsed = parseProductForm(formData);
-  if (!parsed.success) return { error: firstZodError(parsed.error) };
+  if ("error" in parsed) return { error: parsed.error };
 
   const db = getDb();
   const conflict = await db

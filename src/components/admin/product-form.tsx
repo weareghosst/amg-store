@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   createProductAction,
@@ -9,6 +9,8 @@ import {
   type AdminActionState,
 } from "@/actions/admin";
 import { FormMessage, SubmitButton, inputClass, labelClass } from "@/components/forms";
+
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 export interface ProductFormDefaults {
   id?: string;
@@ -37,7 +39,34 @@ export function ProductForm({
     {},
   );
   const [deleting, startDeleting] = useTransition();
+  const [imageData, setImageData] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  function handleFileChange(file: File | undefined) {
+    setUploadError("");
+    if (!file) return;
+    if (/^image\/(png|jpe?g|webp)$/i.test(file.type) === false) {
+      setUploadError("Formato inválido: use PNG, JPG ou WebP.");
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setUploadError("Imagem muito grande (máx. 2MB).");
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageData(String(reader.result ?? ""));
+      if (fileRef.current) fileRef.current.value = "";
+    };
+    reader.onerror = () => {
+      setUploadError("Não foi possível ler a imagem.");
+    };
+    reader.readAsDataURL(file);
+  }
 
   const handleDelete = () => {
     if (!defaults.id) return;
@@ -119,9 +148,49 @@ export function ProductForm({
             ))}
           </select>
         </div>
-        <div>
-          <label htmlFor="p-img" className={labelClass}>URL da imagem (https)</label>
-          <input id="p-img" name="imageUrl" type="url" defaultValue={defaults.imageUrl} placeholder="https://..." className={inputClass} />
+        <div className="space-y-2">
+          <span className={labelClass}>Imagem do produto</span>
+          {imageData && (
+            <div className="overflow-hidden rounded-lg border border-slate-200">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imageData} alt="Pré-visualização" className="h-32 w-full object-cover" />
+            </div>
+          )}
+          <label className="block cursor-pointer rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-center text-sm text-slate-500 transition hover:border-brand-blue hover:text-brand-blue">
+            {imageData
+              ? "Trocar imagem enviada"
+              : "Enviar imagem do computador (PNG, JPG ou WebP — máx. 2MB)"}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={(e) => handleFileChange(e.target.files?.[0] ?? undefined)}
+            />
+          </label>
+          {uploadError && (
+            <p className="text-xs text-red-600">{uploadError}</p>
+          )}
+          <hr className="border-slate-100" />
+          <input
+            id="p-img-url"
+            name="imageUrl"
+            type="text"
+            defaultValue={imageData ? "" : defaults.imageUrl}
+            placeholder="ou cole o link https://..."
+            disabled={Boolean(imageData)}
+            className={inputClass}
+          />
+          {Boolean(imageData) && (
+            <button
+              type="button"
+              onClick={() => setImageData("")}
+              className="text-xs font-medium text-red-500 hover:underline"
+            >
+              Remover imagem enviada e usar link
+            </button>
+          )}
+          {imageData && <input type="hidden" name="imageUpload" value={imageData} />}
         </div>
       </div>
 

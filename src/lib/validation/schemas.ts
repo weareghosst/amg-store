@@ -57,8 +57,8 @@ export const productFormSchema = z.object({
   imageUrl: z
     .string()
     .trim()
-    .refine((v) => v === "" || /^https:\/\/.+/i.test(v), {
-      message: "A URL da imagem deve começar com https://",
+    .refine((v) => v === "" || /^https:\/\/.+/i.test(v) || /^data:image\/(?:png|jpe?g|webp);base64,/i.test(v), {
+      message: "Use uma URL https:// ou envie uma imagem PNG, JPG ou WebP do computador.",
     })
     .optional()
     .or(z.literal("")),
