@@ -3,6 +3,7 @@ import path from "path";
 import Image from "next/image";
 import Link from "next/link";
 import { getStoreSettings, DEFAULT_SETTINGS } from "@/lib/settings";
+import { NewsletterForm } from "@/components/newsletter-form";
 
 const hasFadeImage = existsSync(path.join(process.cwd(), "public", "fade.jpg"));
 const hasOldLogo = existsSync(path.join(process.cwd(), "public", "logo-old.png"));
@@ -68,7 +69,13 @@ export async function Footer() {
         </section>
       )}
 
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
+      <div className="border-t border-white/10">
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <NewsletterForm />
+        </div>
+      </div>
+
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="text-xl font-black tracking-tight">
             AMG <span className="text-brand-green">•</span>
@@ -77,28 +84,64 @@ export async function Footer() {
             Produtos de Limpeza e Variedades
           </p>
           <p className="mt-2 text-sm text-white/60">
-            Atacado e varejo — Centro de Distribuição.
+            Atacado e varejo — Centro de Distribuição. Mostruário de produtos;
+            compra e atendimento pelo WhatsApp.
           </p>
         </div>
 
         <div className="text-sm">
           <p className="font-bold uppercase tracking-wide text-brand-green">
-            Entrega e contato
+            Institucional
           </p>
-          <p className="mt-2 text-white/70">
-            🚚 Entrega própria em São Paulo e retirada na loja
-            <br />
-            📦 Enviando para todo o Brasil
-            <br />
-            💬 Atendimento e vendas pelo WhatsApp
-          </p>
+          <div className="mt-2 flex flex-col gap-1">
+            <Link
+              href="/sobre"
+              className="text-white/70 transition hover:text-brand-green"
+            >
+              Sobre Nós
+            </Link>
+            <Link
+              href="/como-comprar"
+              className="text-white/70 transition hover:text-brand-green"
+            >
+              Como Comprar
+            </Link>
+          </div>
         </div>
 
         <div className="text-sm">
           <p className="font-bold uppercase tracking-wide text-brand-green">
-            Contato
+            Legal
+          </p>
+          <div className="mt-2 flex flex-col gap-1">
+            <Link
+              href="/privacidade"
+              className="text-white/70 transition hover:text-brand-green"
+            >
+              LGPD
+            </Link>
+            <Link
+              href="/como-comprar"
+              className="text-white/70 transition hover:text-brand-green"
+            >
+              Como Comprar
+            </Link>
+          </div>
+        </div>
+
+        <div className="text-sm">
+          <p className="font-bold uppercase tracking-wide text-brand-green">
+            Atendimento
           </p>
           <div className="mt-2 flex flex-col gap-1 text-white/70">
+            {settings.storeEmail && (
+              <a
+                href={`mailto:${settings.storeEmail}`}
+                className="transition hover:text-brand-green"
+              >
+                {settings.storeEmail}
+              </a>
+            )}
             {settings.storePhone && (
               <a
                 href={`https://wa.me/55${settings.storePhone.replace(/\D/g, "")}`}
@@ -109,16 +152,8 @@ export async function Footer() {
                 WhatsApp: {formatPhoneDisplay(settings.storePhone)}
               </a>
             )}
-            {settings.storeEmail && (
-              <a
-                href={`mailto:${settings.storeEmail}`}
-                className="transition hover:text-brand-green"
-              >
-                {settings.storeEmail}
-              </a>
-            )}
-            {!settings.storePhone && !settings.storeEmail && (
-              <p>Fale conosco pelo WhatsApp.</p>
+            {!settings.storeEmail && !settings.storePhone && (
+              <p>Fale conosco pelos nossos canais de atendimento.</p>
             )}
           </div>
         </div>
