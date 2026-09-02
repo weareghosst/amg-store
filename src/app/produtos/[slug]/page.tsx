@@ -173,15 +173,22 @@ export default async function ProductPage({
     );
   }
 
-  const db = getDb();
-  const rows = await db
-    .select({ product: products, category: categories })
-    .from(products)
-    .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(and(eq(products.slug, slug), eq(products.active, true)))
-    .limit(1);
+  let row:
+    | { product: typeof products.$inferSelect; category: typeof categories.$inferSelect | null }
+    | undefined;
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({ product: products, category: categories })
+      .from(products)
+      .leftJoin(categories, eq(products.categoryId, categories.id))
+      .where(and(eq(products.slug, slug), eq(products.active, true)))
+      .limit(1);
+    row = rows[0];
+  } catch (err) {
+    console.error(`[produtos/${slug}] banco indisponível:`, err);
+  }
 
-  const row = rows[0];
   if (!row) notFound();
   const { product, category } = row;
 
