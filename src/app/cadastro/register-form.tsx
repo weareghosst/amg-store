@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { registerAction, type AuthFormState } from "@/actions/auth";
 import { FormMessage, SubmitButton, inputClass, labelClass } from "@/components/forms";
+import { CaptchaField } from "@/components/captcha-field";
 
 export function RegisterForm() {
   const [state, formAction] = useActionState<AuthFormState, FormData>(
@@ -58,6 +59,7 @@ export function RegisterForm() {
           className={inputClass}
         />
       </div>
+      <CaptchaField />
       <FormMessage error={state.error} />
       <SubmitButton pendingText="Criando conta...">Criar conta</SubmitButton>
       <p className="text-center text-sm text-slate-500">

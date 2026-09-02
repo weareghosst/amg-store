@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { loginAction, type AuthFormState } from "@/actions/auth";
 import { FormMessage, SubmitButton, inputClass, labelClass } from "@/components/forms";
+import { CaptchaField } from "@/components/captcha-field";
 
 export function LoginForm({ next, showDemoCreds }: { next?: string; showDemoCreds?: boolean }) {
   const [state, formAction] = useActionState<AuthFormState, FormData>(
@@ -40,6 +41,7 @@ export function LoginForm({ next, showDemoCreds }: { next?: string; showDemoCred
           className={inputClass}
         />
       </div>
+      <CaptchaField />
       <FormMessage error={state.error} />
       {showDemoCreds && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">

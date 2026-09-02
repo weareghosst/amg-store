@@ -13,6 +13,7 @@ import {
   getRequestIp,
 } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { verifyCaptcha } from "@/lib/captcha";
 import { audit } from "@/lib/audit";
 import {
   firstZodError,
@@ -40,6 +41,11 @@ export async function registerAction(
   formData: FormData,
 ): Promise<AuthFormState> {
   const ip = await getRequestIp();
+  const captchaOk = await verifyCaptcha(formData.get("captcha"));
+  if (!captchaOk) {
+    return { error: "Verificação de segurança inválida. Tente novamente." };
+  }
+
   const rl = await rateLimit({ key: `register:${ip}`, limit: 5, windowSeconds: 900 });
   if (!rl.allowed) {
     return { error: "Muitas tentativas. Aguarde alguns minutos." };
@@ -114,6 +120,11 @@ export async function loginAction(
       });
       redirect(safeNextPath(formData.get("next")));
     }
+  }
+
+  const captchaOk = await verifyCaptcha(formData.get("captcha"));
+  if (!captchaOk) {
+    return { error: "Verificação de segurança inválida. Tente novamente." };
   }
 
   const [rlIp, rlEmail] = await Promise.all([
