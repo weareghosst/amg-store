@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import {
   CAPTCHA_COOKIE,
   CAPTCHA_TTL_SECONDS,
@@ -16,15 +17,20 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const text = generateCaptchaText();
 
-  const res = new Response(renderCaptchaSvg(text), {
+  const res = new NextResponse(renderCaptchaSvg(text), {
     headers: {
-      "Content-Type": "image/svg+xml",
-      "Cache-Control": "no-store",
+      "Content-Type": "image/svg+xml; charset=utf-8",
+      "Cache-Control": "private, no-store, no-cache, must-revalidate",
+      Pragma: "no-cache",
+      Vary: "Cookie",
     },
   });
-  res.headers.append(
-    "Set-Cookie",
-    `${CAPTCHA_COOKIE}=${hashCaptchaAnswer(text)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${CAPTCHA_TTL_SECONDS}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,
-  );
+  res.cookies.set(CAPTCHA_COOKIE, hashCaptchaAnswer(text), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: CAPTCHA_TTL_SECONDS,
+    secure: process.env.NODE_ENV === "production",
+  });
   return res;
 }
