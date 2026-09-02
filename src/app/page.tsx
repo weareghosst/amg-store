@@ -22,10 +22,6 @@ const DEMO_PRODUCTS = [
     imageUrl:
       "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80",
     active: true,
-    weightGrams: 800,
-    widthCm: 20,
-    heightCm: 15,
-    lengthCm: 25,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -42,10 +38,6 @@ const DEMO_PRODUCTS = [
     imageUrl:
       "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=900&q=80",
     active: true,
-    weightGrams: 650,
-    widthCm: 12,
-    heightCm: 28,
-    lengthCm: 10,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -62,10 +54,6 @@ const DEMO_PRODUCTS = [
     imageUrl:
       "https://images.unsplash.com/photo-1612817159899-1f62b7c4f746?auto=format&fit=crop&w=900&q=80",
     active: true,
-    weightGrams: 300,
-    widthCm: 10,
-    heightCm: 3,
-    lengthCm: 20,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -82,60 +70,10 @@ const DEMO_PRODUCTS = [
     imageUrl:
       "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
     active: true,
-    weightGrams: 220,
-    widthCm: 16,
-    heightCm: 5,
-    lengthCm: 16,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
 ];
-
-const CATEGORY_DEMO_PRODUCTS: Record<string, typeof DEMO_PRODUCTS> = {
-  "limpeza-higiene": DEMO_PRODUCTS.slice(0, 2),
-  epi: DEMO_PRODUCTS.slice(2, 4),
-  piscina: [
-    {
-      ...DEMO_PRODUCTS[0],
-      id: "demo-piscina",
-      name: "Kit de Manutenção para Piscina",
-      slug: "kit-de-manutencao-para-piscina",
-      sku: "PISC-001",
-      priceCents: 32990,
-      comparePriceCents: 37990,
-      description: "Linha completa para limpeza, tratamento e cuidado diário da piscina.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80",
-    },
-  ],
-  infantil: [
-    {
-      ...DEMO_PRODUCTS[0],
-      id: "demo-infantil",
-      name: "Cesta Organizadora Infantil",
-      slug: "cesta-organizadora-infantil",
-      sku: "INF-001",
-      priceCents: 15990,
-      comparePriceCents: 18990,
-      description: "Estilo divertido e funcional para organizar brinquedos e objetos do dia a dia.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=900&q=80",
-    },
-    {
-      ...DEMO_PRODUCTS[1],
-      id: "demo-higiene-infantil",
-      name: "Kit de Higiene Infantil",
-      slug: "kit-de-higiene-infantil",
-      sku: "INF-002",
-      priceCents: 13990,
-      comparePriceCents: 16990,
-      description: "Produtos suaves e práticos para cuidar da rotina da família com carinho.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80",
-    },
-  ],
-  "todos-produtos": DEMO_PRODUCTS,
-};
 
 export const dynamic = "force-dynamic";
 
@@ -360,8 +298,8 @@ export default async function HomePage() {
               <div>
                 <h3 className="font-bold text-brand-navy">Agilidade que entrega</h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Entrega própria em SP e envio para todo o Brasil via Melhor
-                  Envio, com pagamento seguro pelo Asaas.
+                  Entrega própria em SP e envio para todo o Brasil, com
+                  atendimento e vendas pelo WhatsApp.
                 </p>
               </div>
             </div>

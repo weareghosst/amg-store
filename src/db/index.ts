@@ -1,10 +1,11 @@
-import { Pool } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 
-// Pool via WebSocket (driver Neon) — suporta transações interativas,
-// necessárias para o checkout (baixa de estoque + criação do pedido de forma atômica).
-// Em dev, reutiliza o pool entre hot-reloads para não esgotar conexões.
+// Conexão via postgres.js — funciona com Supabase, Neon ou qualquer Postgres.
+// `prepare: false` é exigido pelo pooler do Supabase no modo "transaction"
+// e também é o mais seguro em ambientes serverless (Vercel), onde conexões
+// não são reaproveitadas entre invocações.
 
 function createDb() {
   const url = process.env.DATABASE_URL;
@@ -13,8 +14,8 @@ function createDb() {
       "DATABASE_URL não definida. Configure o arquivo .env (veja .env.example).",
     );
   }
-  const pool = new Pool({ connectionString: url });
-  return drizzle(pool, { schema });
+  const client = postgres(url, { prepare: false });
+  return drizzle(client, { schema });
 }
 
 export type Db = ReturnType<typeof createDb>;

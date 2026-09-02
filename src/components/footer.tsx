@@ -83,14 +83,14 @@ export async function Footer() {
 
         <div className="text-sm">
           <p className="font-bold uppercase tracking-wide text-brand-green">
-            Entrega
+            Entrega e contato
           </p>
           <p className="mt-2 text-white/70">
-            🚚 Entrega própria em São Paulo
+            🚚 Entrega própria em São Paulo e retirada na loja
             <br />
-            📦 Envio para todo o Brasil via Melhor Envio
+            📦 Enviando para todo o Brasil
             <br />
-            🔒 Pagamento seguro com Pix, boleto ou cartão
+            💬 Atendimento e vendas pelo WhatsApp
           </p>
         </div>
 

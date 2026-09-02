@@ -22,10 +22,6 @@ export interface ProductFormDefaults {
   categoryId: string;
   imageUrl: string;
   active: boolean;
-  weightGrams: number;
-  widthCm: number;
-  heightCm: number;
-  lengthCm: number;
 }
 
 export function ProductForm({
@@ -128,30 +124,6 @@ export function ProductForm({
           <input id="p-img" name="imageUrl" type="url" defaultValue={defaults.imageUrl} placeholder="https://..." className={inputClass} />
         </div>
       </div>
-
-      <fieldset className="rounded-lg border border-slate-200 p-3">
-        <legend className="px-1 text-sm font-medium text-slate-500">
-          Dados para frete (Melhor Envio)
-        </legend>
-        <div className="grid gap-3 sm:grid-cols-4">
-          <div>
-            <label htmlFor="p-weight" className={labelClass}>Peso (g)</label>
-            <input id="p-weight" name="weightGrams" type="number" required min={1} defaultValue={defaults.weightGrams} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="p-width" className={labelClass}>Largura (cm)</label>
-            <input id="p-width" name="widthCm" type="number" required min={1} defaultValue={defaults.widthCm} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="p-height" className={labelClass}>Altura (cm)</label>
-            <input id="p-height" name="heightCm" type="number" required min={1} defaultValue={defaults.heightCm} className={inputClass} />
-          </div>
-          <div>
-            <label htmlFor="p-length" className={labelClass}>Comprimento (cm)</label>
-            <input id="p-length" name="lengthCm" type="number" required min={1} defaultValue={defaults.lengthCm} className={inputClass} />
-          </div>
-        </div>
-      </fieldset>
 
       <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
         <input

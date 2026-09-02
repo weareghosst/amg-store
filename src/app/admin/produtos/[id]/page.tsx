@@ -56,10 +56,6 @@ export default async function EditProductPage({
           categoryId: product.categoryId ?? "",
           imageUrl: product.imageUrl ?? "",
           active: product.active,
-          weightGrams: product.weightGrams,
-          widthCm: product.widthCm,
-          heightCm: product.heightCm,
-          lengthCm: product.lengthCm,
         }}
       />
     </div>

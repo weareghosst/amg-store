@@ -1,9 +1,9 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db";
-import { addresses, users } from "@/db/schema";
+import { users } from "@/db/schema";
 import { assertUser } from "@/lib/auth/guards";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
@@ -13,73 +13,13 @@ import {
 } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
-import {
-  addressSchema,
-  cpfCnpjSchema,
-  firstZodError,
-  passwordSchema,
-} from "@/lib/validation/schemas";
-import { onlyDigits } from "@/lib/validation/cpf-cnpj";
+import { firstZodError, passwordSchema } from "@/lib/validation/schemas";
+import { onlyDigits } from "@/lib/validation/digits";
 import { revalidatePath } from "next/cache";
 
 export interface ActionState {
   error?: string;
   success?: string;
-}
-
-export async function addAddressAction(
-  _prev: ActionState,
-  formData: FormData,
-): Promise<ActionState> {
-  const user = await assertUser();
-  const parsed = addressSchema.safeParse({
-    label: formData.get("label") ?? "",
-    cep: formData.get("cep") ?? "",
-    street: formData.get("street") ?? "",
-    number: formData.get("number") ?? "",
-    complement: formData.get("complement") ?? "",
-    district: formData.get("district") ?? "",
-    city: formData.get("city") ?? "",
-    state: formData.get("state") ?? "",
-  });
-  if (!parsed.success) return { error: firstZodError(parsed.error) };
-
-  const db = getDb();
-  const count = await db
-    .select({ id: addresses.id })
-    .from(addresses)
-    .where(eq(addresses.userId, user.id));
-  if (count.length >= 10) {
-    return { error: "Limite de 10 endereços atingido." };
-  }
-
-  await db.insert(addresses).values({
-    userId: user.id,
-    label: parsed.data.label || "Principal",
-    cep: parsed.data.cep,
-    street: parsed.data.street,
-    number: parsed.data.number,
-    complement: parsed.data.complement || null,
-    district: parsed.data.district,
-    city: parsed.data.city,
-    state: parsed.data.state,
-  });
-  revalidatePath("/conta");
-  return { success: "Endereço salvo." };
-}
-
-export async function deleteAddressAction(addressId: string): Promise<ActionState> {
-  const user = await assertUser();
-  const parsed = z.uuid().safeParse(addressId);
-  if (!parsed.success) return { error: "Endereço inválido." };
-
-  const db = getDb();
-  // Escopo por usuário: ninguém apaga endereço de outra conta.
-  await db
-    .delete(addresses)
-    .where(and(eq(addresses.id, parsed.data), eq(addresses.userId, user.id)));
-  revalidatePath("/conta");
-  return { success: "Endereço removido." };
 }
 
 const profileSchema = z.object({
@@ -90,7 +30,6 @@ const profileSchema = z.object({
     .refine((v) => v.length === 0 || (v.length >= 10 && v.length <= 11), {
       message: "Telefone inválido.",
     }),
-  cpfCnpj: z.string(),
 });
 
 export async function updateProfileAction(
@@ -101,16 +40,8 @@ export async function updateProfileAction(
   const parsed = profileSchema.safeParse({
     name: formData.get("name") ?? "",
     phone: formData.get("phone") ?? "",
-    cpfCnpj: formData.get("cpfCnpj") ?? "",
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
-
-  let cpfCnpj = user.cpfCnpj;
-  if (parsed.data.cpfCnpj.trim() !== "") {
-    const doc = cpfCnpjSchema.safeParse(parsed.data.cpfCnpj);
-    if (!doc.success) return { error: "CPF/CNPJ inválido." };
-    cpfCnpj = doc.data;
-  }
 
   const db = getDb();
   await db
@@ -118,8 +49,6 @@ export async function updateProfileAction(
     .set({
       name: parsed.data.name,
       phone: parsed.data.phone || null,
-      cpfCnpj,
-      personType: cpfCnpj && cpfCnpj.length === 14 ? "PJ" : "PF",
       updatedAt: new Date(),
     })
     .where(eq(users.id, user.id));
@@ -154,7 +83,6 @@ export async function changePasswordAction(
     .set({ passwordHash: await hashPassword(next.data), updatedAt: new Date() })
     .where(eq(users.id, user.id));
 
-  // Troca de senha revoga TODAS as sessões (inclusive de um possível invasor)
   await destroyAllUserSessions(user.id);
   await createSession(user.id);
   await audit({ userId: user.id, action: "user.change_password", ip });

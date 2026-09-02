@@ -5,17 +5,7 @@ import { settings } from "@/db/schema";
 import { z } from "zod";
 
 export const storeSettingsSchema = z.object({
-  /** CEP de origem da loja (para cotação Melhor Envio) — somente dígitos */
-  originCep: z.string().regex(/^\d{8}$/),
-  /** Taxa da entrega própria dentro de SP, em centavos */
-  ownDeliveryFeeCents: z.number().int().min(0),
-  /** Frete grátis na entrega própria a partir deste subtotal (centavos). 0 = nunca */
-  ownDeliveryFreeAboveCents: z.number().int().min(0),
-  /** Prazo estimado da entrega própria, em dias úteis */
-  ownDeliveryDays: z.number().int().min(1).max(30),
-  /** Escopo da entrega própria: estado inteiro de SP ou só a capital */
-  ownDeliveryScope: z.enum(["state", "capital"]),
-  /** Telefone/WhatsApp exibido no site */
+  /** Telefone/WhatsApp exibido no site e usado nos botões de contato */
   storePhone: z.string().max(30),
   /** E-mail de contato exibido no site */
   storeEmail: z.string().max(120),
@@ -24,11 +14,6 @@ export const storeSettingsSchema = z.object({
 export type StoreSettings = z.infer<typeof storeSettingsSchema>;
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  originCep: "01001000",
-  ownDeliveryFeeCents: 1500,
-  ownDeliveryFreeAboveCents: 30000,
-  ownDeliveryDays: 3,
-  ownDeliveryScope: "state",
   storePhone: "",
   storeEmail: "",
 };

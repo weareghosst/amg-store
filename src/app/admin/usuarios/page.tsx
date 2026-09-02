@@ -39,7 +39,6 @@ export default async function AdminUsersPage() {
             <tr>
               <th className="px-4 py-3">Nome</th>
               <th className="px-4 py-3">E-mail</th>
-              <th className="px-4 py-3">Documento</th>
               <th className="px-4 py-3">Papel</th>
               <th className="px-4 py-3"></th>
             </tr>
@@ -49,7 +48,6 @@ export default async function AdminUsersPage() {
               <tr key={user.id} className="border-b border-slate-100 last:border-0">
                 <td className="px-4 py-3 font-medium">{user.name}</td>
                 <td className="px-4 py-3 text-slate-500">{user.email}</td>
-                <td className="px-4 py-3 text-slate-500">{user.cpfCnpj ?? "—"}</td>
                 <td className="px-4 py-3">
                   {user.role === "admin" ? (
                     <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">

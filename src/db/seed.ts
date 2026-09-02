@@ -5,8 +5,8 @@
  * O e-mail/senha do admin vêm de SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD no .env.
  */
 import "dotenv/config";
-import { Pool } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { categories, products, settings, users } from "./schema";
@@ -24,8 +24,8 @@ async function main() {
     );
   }
 
-  const pool = new Pool({ connectionString: url });
-  const db = drizzle(pool);
+  const client = postgres(url, { prepare: false });
+  const db = drizzle(client);
 
   // Admin
   const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -180,11 +180,6 @@ async function main() {
     await db.insert(settings).values({
       key: "store",
       value: {
-        originCep: "01001000",
-        ownDeliveryFeeCents: 1500,
-        ownDeliveryFreeAboveCents: 30000,
-        ownDeliveryDays: 3,
-        ownDeliveryScope: "state",
         storePhone: "",
         storeEmail: "",
       },
@@ -192,7 +187,7 @@ async function main() {
     console.log("✅ Configurações padrão criadas (edite no painel admin).");
   }
 
-  await pool.end();
+  await client.end();
   console.log("\n🎉 Seed concluído.");
 }
 

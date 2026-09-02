@@ -20,7 +20,7 @@ export default async function LoginPage({
     <div className="mx-auto max-w-md px-4 py-12">
       <h1 className="text-2xl font-bold text-slate-800">Entrar</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Acesse sua conta para acompanhar pedidos.
+        Acesse sua conta para gerenciar seus dados e preferências.
       </p>
       <Suspense>
         <LoginForm

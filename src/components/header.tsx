@@ -3,7 +3,6 @@ import path from "path";
 import Image from "next/image";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
-import { CartBadge } from "./cart/cart-badge";
 import { logoutAction } from "@/actions/auth";
 import { categoryHref } from "@/lib/category-pages";
 
@@ -55,7 +54,6 @@ export async function Header() {
         </Link>
 
         <nav className="flex flex-wrap items-center justify-end gap-1.5">
-          <CartBadge />
           {user ? (
             <div className="flex flex-wrap items-center gap-1">
               <Link

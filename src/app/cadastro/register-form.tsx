@@ -46,36 +46,18 @@ export function RegisterForm() {
           className={inputClass}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="phone" className={labelClass}>
-            Telefone/WhatsApp
-          </label>
-          <input
-            id="phone"
-            name="phone"
-            inputMode="tel"
-            placeholder="(11) 99999-9999"
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label htmlFor="cpfCnpj" className={labelClass}>
-            CPF ou CNPJ
-          </label>
-          <input
-            id="cpfCnpj"
-            name="cpfCnpj"
-            inputMode="numeric"
-            placeholder="Somente números"
-            className={inputClass}
-          />
-        </div>
+      <div>
+        <label htmlFor="phone" className={labelClass}>
+          Telefone/WhatsApp
+        </label>
+        <input
+          id="phone"
+          name="phone"
+          inputMode="tel"
+          placeholder="(11) 99999-9999"
+          className={inputClass}
+        />
       </div>
-      <p className="text-xs text-slate-400">
-        O CPF/CNPJ é usado para emitir a cobrança do pedido. Você pode
-        preenchê-lo depois, no checkout.
-      </p>
       <FormMessage error={state.error} />
       <SubmitButton pendingText="Criando conta...">Criar conta</SubmitButton>
       <p className="text-center text-sm text-slate-500">

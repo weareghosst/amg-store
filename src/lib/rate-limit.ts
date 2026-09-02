@@ -26,6 +26,7 @@ export async function rateLimit(opts: {
       END
     RETURNING count
   `);
-  const count = Number((result.rows[0] as { count: number }).count);
+  const rows = result as unknown as { count: number }[];
+  const count = Number(rows[0]?.count ?? 0);
   return { allowed: count <= opts.limit, remaining: Math.max(0, opts.limit - count) };
 }

@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 const STORAGE_KEY = "amg-cookie-consent";
 
 export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const choice = localStorage.getItem(STORAGE_KEY);
-    if (!choice) setVisible(true);
-  }, []);
+  const [visible, setVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return !localStorage.getItem(STORAGE_KEY);
+  });
 
   function handleChoice(choice: "accepted" | "declined") {
     localStorage.setItem(STORAGE_KEY, choice);

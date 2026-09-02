@@ -16,10 +16,7 @@ function getDevAdminFallback(): User {
     passwordHash: "",
     name: "Admin de desenvolvimento",
     phone: null,
-    cpfCnpj: null,
-    personType: "PF",
     role: "admin",
-    asaasCustomerId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   } as User;

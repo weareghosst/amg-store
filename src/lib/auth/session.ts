@@ -24,10 +24,7 @@ function getTemporaryAdminUser(): User {
     passwordHash: "",
     name: process.env.TEMP_ADMIN_NAME ?? "Admin temporário",
     phone: null,
-    cpfCnpj: null,
-    personType: "PF",
     role: "admin",
-    asaasCustomerId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   } as User;

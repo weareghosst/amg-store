@@ -29,7 +29,6 @@ export interface AuthFormState {
 const DUMMY_HASH = "$2b$12$C6UzMDM.H6dfI/f/IKcEeO7ZbF0LMPtcuBRqmxYQ4XU2XVftGvOhK";
 
 function safeNextPath(raw: FormDataEntryValue | null): string {
-  // Só aceita caminhos internos — evita open redirect.
   if (typeof raw === "string" && raw.startsWith("/") && !raw.startsWith("//")) {
     return raw;
   }
@@ -51,11 +50,10 @@ export async function registerAction(
     email: formData.get("email"),
     password: formData.get("password"),
     phone: formData.get("phone") ?? "",
-    cpfCnpj: formData.get("cpfCnpj") ?? "",
   });
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
-  const { name, email, password, phone, cpfCnpj } = parsed.data;
+  const { name, email, password, phone } = parsed.data;
   const db = getDb();
 
   const existing = await db
@@ -68,7 +66,6 @@ export async function registerAction(
   }
 
   const passwordHash = await hashPassword(password);
-  const cpfCnpjClean = cpfCnpj || null;
   const [user] = await db
     .insert(users)
     .values({
@@ -76,8 +73,6 @@ export async function registerAction(
       email,
       passwordHash,
       phone: phone || null,
-      cpfCnpj: cpfCnpjClean,
-      personType: cpfCnpjClean && cpfCnpjClean.length === 14 ? "PJ" : "PF",
     })
     .returning({ id: users.id });
 
@@ -101,9 +96,6 @@ export async function loginAction(
 
   const { email, password } = parsed.data;
 
-  // Atalho de admin temporário: disponível SOMENTE fora de produção e exige
-  // que as env vars TEMP_ADMIN_EMAIL / TEMP_ADMIN_PASSWORD estejam definidas.
-  // Sem as env vars, o caminho fica totalmente desativado (nenhum fallback).
   if (process.env.NODE_ENV !== "production") {
     const tempAdminEmail = process.env.TEMP_ADMIN_EMAIL;
     const tempAdminPassword = process.env.TEMP_ADMIN_PASSWORD;
@@ -124,7 +116,6 @@ export async function loginAction(
     }
   }
 
-  // Limita por IP e também por conta-alvo (protege contra força bruta distribuída no mesmo alvo)
   const [rlIp, rlEmail] = await Promise.all([
     rateLimit({ key: `login:ip:${ip}`, limit: 10, windowSeconds: 900 }),
     rateLimit({ key: `login:email:${email}`, limit: 8, windowSeconds: 900 }),
@@ -140,7 +131,6 @@ export async function loginAction(
   const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
   if (!user || !valid) {
     await audit({ action: "user.login_failed", detail: { email }, ip });
-    // Mensagem genérica: não revela se o e-mail existe.
     return { error: "E-mail ou senha incorretos." };
   }
 

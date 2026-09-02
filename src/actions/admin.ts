@@ -4,15 +4,8 @@ import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getDb } from "@/db";
-import {
-  categories,
-  orderItems,
-  orders,
-  products,
-  users,
-} from "@/db/schema";
+import { categories, products, users } from "@/db/schema";
 import { assertAdmin } from "@/lib/auth/guards";
-import { restoreOrderStock, transitionOrderStatus } from "@/lib/orders";
 import { getRequestIp } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { parseReaisToCents } from "@/lib/money";
@@ -21,11 +14,7 @@ import {
   firstZodError,
   productFormSchema,
 } from "@/lib/validation/schemas";
-import {
-  saveStoreSettings,
-  storeSettingsSchema,
-} from "@/lib/settings";
-import { normalizeCep } from "@/lib/cep";
+import { saveStoreSettings, storeSettingsSchema } from "@/lib/settings";
 
 export interface AdminActionState {
   error?: string;
@@ -49,10 +38,6 @@ function parseProductForm(formData: FormData) {
     categoryId: String(formData.get("categoryId") ?? "") || null,
     imageUrl: formData.get("imageUrl") ?? "",
     active: formData.get("active") === "on",
-    weightGrams: Number(formData.get("weightGrams") ?? 0),
-    widthCm: Number(formData.get("widthCm") ?? 0),
-    heightCm: Number(formData.get("heightCm") ?? 0),
-    lengthCm: Number(formData.get("lengthCm") ?? 0),
   });
 }
 
@@ -140,18 +125,6 @@ export async function deleteProductAction(productId: string): Promise<AdminActio
   if (!idParsed.success) return { error: "Produto inválido." };
 
   const db = getDb();
-  const referenced = await db
-    .select({ id: orderItems.id })
-    .from(orderItems)
-    .where(eq(orderItems.productId, idParsed.data))
-    .limit(1);
-  if (referenced.length > 0) {
-    return {
-      error:
-        "Este produto já aparece em pedidos e não pode ser excluído. Desative-o em vez disso.",
-    };
-  }
-
   await db.delete(products).where(eq(products.id, idParsed.data));
   await audit({
     userId: admin.id,
@@ -228,88 +201,6 @@ export async function deleteCategoryAction(categoryId: string): Promise<AdminAct
   return { success: "Categoria excluída." };
 }
 
-// ---------- Pedidos ----------
-
-const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  pending_payment: ["paid", "canceled"],
-  paid: ["processing", "canceled"],
-  processing: ["shipped", "canceled"],
-  shipped: ["delivered"],
-  delivered: [],
-  canceled: [],
-};
-
-const orderStatusInput = z.object({
-  orderId: z.uuid(),
-  status: z.enum(["paid", "processing", "shipped", "delivered", "canceled"]),
-  trackingCode: z.string().trim().max(60).optional().or(z.literal("")),
-});
-
-export async function updateOrderStatusAction(
-  _prev: AdminActionState,
-  formData: FormData,
-): Promise<AdminActionState> {
-  const admin = await assertAdmin();
-  const parsed = orderStatusInput.safeParse({
-    orderId: formData.get("orderId"),
-    status: formData.get("status"),
-    trackingCode: formData.get("trackingCode") ?? "",
-  });
-  if (!parsed.success) return { error: firstZodError(parsed.error) };
-
-  const db = getDb();
-  const rows = await db
-    .select()
-    .from(orders)
-    .where(eq(orders.id, parsed.data.orderId))
-    .limit(1);
-  const order = rows[0];
-  if (!order) return { error: "Pedido não encontrado." };
-
-  // Máquina de estados aplicada no servidor — o front não decide transições.
-  if (!ALLOWED_TRANSITIONS[order.status].includes(parsed.data.status)) {
-    return {
-      error: `Transição de "${order.status}" para "${parsed.data.status}" não permitida.`,
-    };
-  }
-
-  // Transição condicional (WHERE status = status lido): se o pedido mudou em
-  // paralelo (outro admin, webhook), nada é aplicado — evita, por exemplo,
-  // devolver o estoque duas vezes num cancelamento concorrente.
-  const moved = await db.transaction(async (tx) => {
-    const ok = await transitionOrderStatus(tx, {
-      orderId: order.id,
-      from: order.status,
-      to: parsed.data.status,
-      extra: { trackingCode: parsed.data.trackingCode || order.trackingCode },
-    });
-    if (!ok) return false;
-
-    // Cancelamento devolve o estoque
-    if (parsed.data.status === "canceled") {
-      await restoreOrderStock(tx, order.id);
-    }
-    return true;
-  });
-  if (!moved) {
-    return {
-      error: "O pedido mudou de status em outra sessão. Recarregue a página e tente de novo.",
-    };
-  }
-
-  await audit({
-    userId: admin.id,
-    action: "order.status_change",
-    entity: "order",
-    entityId: order.id,
-    detail: { from: order.status, to: parsed.data.status },
-    ip: await getRequestIp(),
-  });
-  revalidatePath("/admin/pedidos");
-  revalidatePath(`/admin/pedidos/${order.id}`);
-  return { success: "Status atualizado." };
-}
-
 // ---------- Configurações ----------
 
 export async function saveSettingsAction(
@@ -318,19 +209,7 @@ export async function saveSettingsAction(
 ): Promise<AdminActionState> {
   const admin = await assertAdmin();
 
-  const originCep = normalizeCep(String(formData.get("originCep") ?? ""));
-  if (!originCep) return { error: "CEP de origem inválido." };
-
-  const fee = parseReaisToCents(String(formData.get("ownDeliveryFee") ?? ""));
-  const freeAbove = parseReaisToCents(String(formData.get("ownDeliveryFreeAbove") ?? "0"));
-  if (fee === null || freeAbove === null) return { error: "Valores monetários inválidos." };
-
   const parsed = storeSettingsSchema.safeParse({
-    originCep,
-    ownDeliveryFeeCents: fee,
-    ownDeliveryFreeAboveCents: freeAbove,
-    ownDeliveryDays: Number(formData.get("ownDeliveryDays") ?? 0),
-    ownDeliveryScope: formData.get("ownDeliveryScope") ?? "state",
     storePhone: String(formData.get("storePhone") ?? "").trim(),
     storeEmail: String(formData.get("storeEmail") ?? "").trim(),
   });

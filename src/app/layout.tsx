@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { CartProvider } from "@/components/cart/cart-context";
 import { Header } from "@/components/header";
 import { InfoBar } from "@/components/info-bar";
 import { Footer } from "@/components/footer";
@@ -38,14 +37,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-screen flex-col">
-        <CartProvider>
-          <Header />
-          <InfoBar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <WhatsAppButton />
-          <CookieConsent />
-        </CartProvider>
+        <Header />
+        <InfoBar />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <WhatsAppButton />
+        <CookieConsent />
       </body>
     </html>
   );

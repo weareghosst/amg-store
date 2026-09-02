@@ -1,4 +1,4 @@
-import { getStoreSettings } from "@/lib/settings";
+import { buildWhatsAppLink, getWhatsAppPhone } from "@/lib/whatsapp";
 
 /**
  * Botão flutuante de WhatsApp. O número vem das Configurações do admin
@@ -6,26 +6,12 @@ import { getStoreSettings } from "@/lib/settings";
  * usa a variável de ambiente WHATSAPP_PHONE como alternativa.
  */
 export async function WhatsAppButton() {
-  let phone = "";
-  try {
-    phone = (await getStoreSettings()).storePhone;
-  } catch {
-    // banco indisponível: cai no fallback de ambiente
-  }
-  phone = phone || process.env.WHATSAPP_PHONE || "";
-
-  const digits = phone.replace(/\D/g, "");
-  if (!digits) return null;
-
-  const full =
-    digits.startsWith("55") && digits.length >= 12 ? digits : `55${digits}`;
-  const message = encodeURIComponent(
-    "Olá! Vim pelo site da AMG e gostaria de um atendimento.",
-  );
+  const phone = await getWhatsAppPhone();
+  if (!phone) return null;
 
   return (
     <a
-      href={`https://wa.me/${full}?text=${message}`}
+      href={buildWhatsAppLink(phone, "Olá! Vim pelo site da AMG e gostaria de um atendimento.")}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Fale conosco no WhatsApp"

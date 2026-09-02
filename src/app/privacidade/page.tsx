@@ -66,26 +66,12 @@ export default async function PrivacidadePage() {
           </h2>
           <p className="mt-3">
             Coletamos apenas os dados necessários para atender aos nossos
-            serviços de venda e entrega:
+            serviços de venda e atendimento:
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-6">
             <li>
               <strong>Dados de cadastro:</strong> nome, e-mail, telefone e senha
               (armazenada de forma criptografada).
-            </li>
-            <li>
-              <strong>Dados fiscais:</strong> CPF ou CNPJ, necessários para
-              emissão de notas e processamento de pagamentos.
-            </li>
-            <li>
-              <strong>Dados de entrega:</strong> endereço completo e CEP, usados
-              para cálculo de frete e envio dos pedidos.
-            </li>
-            <li>
-              <strong>Dados de pedido e pagamento:</strong> histórico de
-              compras, valores e forma de pagamento (o processamento financeiro
-              é feito por parceiros como o Asaas — não armazenamos dados
-              completos de cartão).
             </li>
             <li>
               <strong>Dados de navegação:</strong> cookies e informações
@@ -101,16 +87,15 @@ export default async function PrivacidadePage() {
           </h2>
           <p className="mt-3">Utilizamos os dados coletados para:</p>
           <ul className="mt-3 list-disc space-y-1 pl-6">
-            <li>Processar e entregar seus pedidos;</li>
-            <li>Calcular fretes e prazos de entrega;</li>
-            <li>Processar pagamentos com segurança;</li>
+            <li>Gerenciar sua conta e suas informações de cadastro;</li>
             <li>
-              Gerenciar sua conta e permitir o acesso ao histórico de compras;
+              Atender pedidos e solicitações de compra realizadas pelo WhatsApp;
             </li>
             <li>
-              Enviar comunicações sobre o status do seu pedido e atendimento;
+              Enviar comunicações sobre atendimento e novidades (quando você
+              autorizar);
             </li>
-            <li>Cumprir obrigações legais e fiscais;</li>
+            <li>Cumprir obrigações legais;</li>
             <li>Melhorar a sua experiência de navegação no site.</li>
           </ul>
         </section>
@@ -138,10 +123,7 @@ export default async function PrivacidadePage() {
           </p>
           <ul className="mt-3 list-disc space-y-1 pl-6">
             <li>
-              <strong>Asaas</strong> — para processamento de pagamentos;
-            </li>
-            <li>
-              <strong>Melhor Envio</strong> — para cotação e envio de pedidos;
+              Prestadores de serviço de hospedagem e infraestrutura do site;
             </li>
             <li>
               Autoridades públicas, quando exigido por lei ou ordem judicial.

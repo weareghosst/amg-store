@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { formatBRL } from "@/lib/money";
-import { AddToCart } from "@/components/add-to-cart";
+import { WhatsAppBuy } from "@/components/whatsapp-buy";
 
 const DEMO_PRODUCT_DETAILS: Record<
   string,
@@ -16,6 +16,7 @@ const DEMO_PRODUCT_DETAILS: Record<
     comparePriceCents?: number;
     sku: string;
     highlight: string;
+    stock: number;
   }
 > = {
   "kit-limpeza-premium": {
@@ -25,6 +26,7 @@ const DEMO_PRODUCT_DETAILS: Record<
     comparePriceCents: 15990,
     sku: "KIT-001",
     highlight: "Visual para apresentação da loja",
+    stock: 8,
   },
   "dispensador-de-alvejante": {
     name: "Dispensador de Alvejante",
@@ -33,6 +35,7 @@ const DEMO_PRODUCT_DETAILS: Record<
     comparePriceCents: 10990,
     sku: "DISP-002",
     highlight: "Modelo de destaque",
+    stock: 8,
   },
   "luvas-de-protecao-nitrilica": {
     name: "Luvas de Proteção Nitrílica",
@@ -41,6 +44,7 @@ const DEMO_PRODUCT_DETAILS: Record<
     comparePriceCents: 18990,
     sku: "EPI-003",
     highlight: "Ideal para uso diário",
+    stock: 8,
   },
   "oculos-de-seguranca-premium": {
     name: "Óculos de Segurança Premium",
@@ -49,6 +53,7 @@ const DEMO_PRODUCT_DETAILS: Record<
     comparePriceCents: 28990,
     sku: "EPI-004",
     highlight: "Proteção premium",
+    stock: 8,
   },
   "kit-de-manutencao-para-piscina": {
     name: "Kit de Manutenção para Piscina",
@@ -57,6 +62,7 @@ const DEMO_PRODUCT_DETAILS: Record<
     comparePriceCents: 37990,
     sku: "PISC-001",
     highlight: "Para piscina com alto padrão",
+    stock: 8,
   },
   "cesta-organizadora-infantil": {
     name: "Cesta Organizadora Infantil",
@@ -65,6 +71,7 @@ const DEMO_PRODUCT_DETAILS: Record<
     comparePriceCents: 18990,
     sku: "INF-001",
     highlight: "Estilo acolhedor e moderno",
+    stock: 8,
   },
   "kit-de-higiene-infantil": {
     name: "Kit de Higiene Infantil",
@@ -73,6 +80,7 @@ const DEMO_PRODUCT_DETAILS: Record<
     comparePriceCents: 16990,
     sku: "INF-002",
     highlight: "Linha pensada para o dia a dia",
+    stock: 8,
   },
 };
 
@@ -119,19 +127,32 @@ export default async function ProductPage({
                   {formatBRL(demoProduct.priceCents)}
                 </span>
               </div>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="/produtos"
-                  className="inline-flex rounded-full bg-brand-blue px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5"
-                >
-                  Ver mais produtos
-                </Link>
-                <Link
-                  href="/"
-                  className="inline-flex rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-brand-blue hover:text-brand-blue"
-                >
-                  Voltar ao início
-                </Link>
+              <div className="mt-6 flex flex-col gap-3">
+                <span className="max-w-xs">
+                  <WhatsAppBuy
+                    product={{
+                      name: demoProduct.name,
+                      slug,
+                      sku: demoProduct.sku,
+                      priceCents: demoProduct.priceCents,
+                      stock: demoProduct.stock,
+                    }}
+                  />
+                </span>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/produtos"
+                    className="inline-flex rounded-full bg-brand-blue px-5 py-3 font-semibold text-white transition hover:-translate-y-0.5"
+                  >
+                    Ver mais produtos
+                  </Link>
+                  <Link
+                    href="/"
+                    className="inline-flex rounded-full border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:border-brand-blue hover:text-brand-blue"
+                  >
+                    Voltar ao início
+                  </Link>
+                </div>
               </div>
             </div>
             <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-6">
@@ -227,13 +248,12 @@ export default async function ProductPage({
             </span>
           </div>
 
-          <AddToCart
+          <WhatsAppBuy
             product={{
-              id: product.id,
               slug: product.slug,
               name: product.name,
+              sku: product.sku,
               priceCents: product.priceCents,
-              imageUrl: product.imageUrl,
               stock: product.stock,
             }}
           />
@@ -241,11 +261,11 @@ export default async function ProductPage({
           <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
             <p className="font-semibold text-slate-800">Entrega</p>
             <p className="mt-1">
-              🚚 <strong>São Paulo:</strong> entrega própria AMG
+              🚚 Entrega própria em São Paulo e retirada na loja.
             </p>
             <p>
-              📦 <strong>Demais estados:</strong> envio via Melhor Envio (calcule no
-              carrinho)
+              📦 Para os demais estados, combinamos o envio com você pelo
+              WhatsApp.
             </p>
           </div>
 

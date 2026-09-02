@@ -32,10 +32,6 @@ export default async function NewProductPage() {
           categoryId: "",
           imageUrl: "",
           active: true,
-          weightGrams: 500,
-          widthCm: 15,
-          heightCm: 15,
-          lengthCm: 20,
         }}
       />
     </div>
