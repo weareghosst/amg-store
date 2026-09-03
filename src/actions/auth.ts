@@ -46,11 +46,6 @@ export async function registerAction(
     return { error: "Verificação de segurança inválida. Tente novamente." };
   }
 
-  const rl = await rateLimit({ key: `register:${ip}`, limit: 5, windowSeconds: 900 });
-  if (!rl.allowed) {
-    return { error: "Muitas tentativas. Aguarde alguns minutos." };
-  }
-
   const parsed = registerSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -60,6 +55,26 @@ export async function registerAction(
   if (!parsed.success) return { error: firstZodError(parsed.error) };
 
   const { name, email, password, phone } = parsed.data;
+
+  // Rate limiting reforçado, três camadas independentes:
+  // 1. Por IP: limita cadastros vindos do mesmo dispositivo;
+  // 2. Por e-mail: limita tentativas/usos do mesmo e-mail; e
+  // 3. Global: teto de contas novas no site por hora (anti-bot).
+  const [rlIp, rlEmail, rlGlobal] = await Promise.all([
+    rateLimit({ key: `register:ip:${ip}`, limit: 3, windowSeconds: 900 }),
+    rateLimit({ key: `register:email:${email}`, limit: 3, windowSeconds: 3600 }),
+    rateLimit({ key: `register:global`, limit: 20, windowSeconds: 3600 }),
+  ]);
+  if (!rlIp.allowed) {
+    return { error: "Muitos cadastros deste dispositivo. Aguarde alguns minutos." };
+  }
+  if (!rlEmail.allowed) {
+    return { error: "Muitas tentativas com este e-mail. Tente novamente mais tarde." };
+  }
+  if (!rlGlobal.allowed) {
+    return { error: "Muitos cadastros em um curto período. Tente novamente mais tarde." };
+  }
+
   const db = getDb();
 
   const existing = await db
