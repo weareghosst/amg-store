@@ -1,0 +1,53 @@
+name: Gerar APK Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/android-app-v1
+    paths:
+      - "mobile/**"
+      - ".github/workflows/gerar-apk-android.yml"
+
+jobs:
+  gerar-apk:
+    name: Compilar aplicativo AMG
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar código do projeto
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Instalar dependências
+        working-directory: mobile
+        run: npm ci
+
+      - name: Preparar projeto Android
+        working-directory: mobile
+        run: npm run sync
+
+      - name: Gerar APK de teste
+        working-directory: mobile/android
+        run: ./gradlew assembleDebug
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AMG-Android-APK
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
