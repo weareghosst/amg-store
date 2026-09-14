@@ -6,6 +6,10 @@ import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { formatBRL } from "@/lib/money";
 import { WhatsAppBuy } from "@/components/whatsapp-buy";
+import {
+  combinarCategorias,
+  combinarProdutos,
+} from "@/data/produtos-recebidos";
 
 export const dynamic = "force-dynamic";
 
@@ -16,24 +20,29 @@ export default async function ProductPage({
 }) {
   const { slug } = await params;
 
-  let row:
-    | { product: typeof products.$inferSelect; category: typeof categories.$inferSelect | null }
-    | undefined;
+  let productList: (typeof products.$inferSelect)[] = [];
+  let categoryList: (typeof categories.$inferSelect)[] = [];
   try {
     const db = getDb();
-    const rows = await db
-      .select({ product: products, category: categories })
-      .from(products)
-      .leftJoin(categories, eq(products.categoryId, categories.id))
-      .where(and(eq(products.slug, slug), eq(products.active, true)))
-      .limit(1);
-    row = rows[0];
+    [productList, categoryList] = await Promise.all([
+      db
+        .select()
+        .from(products)
+        .where(and(eq(products.slug, slug), eq(products.active, true)))
+        .limit(1),
+      db.select().from(categories).orderBy(categories.position),
+    ]);
   } catch (err) {
     console.error(`[produtos/${slug}] banco indisponível:`, err);
   }
 
-  if (!row) notFound();
-  const { product, category } = row;
+  categoryList = combinarCategorias(categoryList);
+  const product = combinarProdutos(productList, categoryList).find(
+    (item) => item.slug === slug,
+  );
+  if (!product) notFound();
+  const category = categoryList.find((item) => item.id === product.categoryId) ?? null;
+  const priceOnRequest = product.priceCents <= 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -87,14 +96,14 @@ export default async function ProductPage({
           </div>
 
           <div className="flex items-baseline gap-3">
-            {product.comparePriceCents &&
+            {!priceOnRequest && product.comparePriceCents &&
               product.comparePriceCents > product.priceCents && (
                 <span className="text-lg text-slate-400 line-through">
                   {formatBRL(product.comparePriceCents)}
                 </span>
               )}
-            <span className="text-4xl font-black text-brand-blue">
-              {formatBRL(product.priceCents)}
+            <span className={`${priceOnRequest ? "text-2xl" : "text-4xl"} font-black text-brand-blue`}>
+              {priceOnRequest ? "Consulte o preço pelo WhatsApp" : formatBRL(product.priceCents)}
             </span>
           </div>
 

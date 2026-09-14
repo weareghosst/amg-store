@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
@@ -9,6 +9,10 @@ import {
   toMobileCategory,
   toMobileProduct,
 } from "@/lib/mobile-api";
+import {
+  combinarCategorias,
+  combinarProdutos,
+} from "@/data/produtos-recebidos";
 
 export const dynamic = "force-dynamic";
 
@@ -25,48 +29,47 @@ export async function GET(request: NextRequest) {
     ? Math.min(Math.max(Math.trunc(requestedLimit), 1), 100)
     : 60;
 
+  let categoryList: (typeof categories.$inferSelect)[] = [];
+  let databaseProducts: (typeof products.$inferSelect)[] = [];
   try {
     const db = getDb();
-    const categoryList = await db
-      .select()
-      .from(categories)
-      .orderBy(categories.position, categories.name);
-    const activeCategory = categoryList.find((category) => category.slug === categorySlug);
-
-    const conditions = [eq(products.active, true)];
-    if (activeCategory) conditions.push(eq(products.categoryId, activeCategory.id));
-    if (query) {
-      const textMatch = or(
-        ilike(products.name, `%${query}%`),
-        ilike(products.description, `%${query}%`),
-        ilike(products.sku, `%${query}%`),
-      );
-      if (textMatch) conditions.push(textMatch);
-    }
-
-    const [productList, whatsappPhone] = await Promise.all([
+    [categoryList, databaseProducts] = await Promise.all([
+      db
+        .select()
+        .from(categories)
+        .orderBy(categories.position, categories.name),
       db
         .select()
         .from(products)
-        .where(and(...conditions))
+        .where(eq(products.active, true))
         .orderBy(desc(products.createdAt))
-        .limit(limit),
-      getWhatsAppPhone(),
+        .limit(200),
     ]);
-
-    return NextResponse.json(
-      {
-        categories: categoryList.map(toMobileCategory),
-        products: productList.map(toMobileProduct),
-        whatsappPhone,
-      },
-      { headers: mobilePublicHeaders },
-    );
   } catch (error) {
     console.error("[api/mobile/catalog] banco indisponível:", error);
-    return NextResponse.json(
-      { error: "Não foi possível carregar o catálogo agora." },
-      { status: 503, headers: mobilePublicHeaders },
-    );
   }
+
+  const allCategories = combinarCategorias(categoryList);
+  const activeCategory = allCategories.find(
+    (category) => category.slug === categorySlug,
+  );
+  const normalizedQuery = query.toLocaleLowerCase("pt-BR");
+  const productList = combinarProdutos(databaseProducts, allCategories)
+    .filter((product) => !activeCategory || product.categoryId === activeCategory.id)
+    .filter((product) => {
+      if (!normalizedQuery) return true;
+      return `${product.name} ${product.description} ${product.sku ?? ""}`
+        .toLocaleLowerCase("pt-BR")
+        .includes(normalizedQuery);
+    })
+    .slice(0, limit);
+
+  return NextResponse.json(
+    {
+      categories: allCategories.map(toMobileCategory),
+      products: productList.map(toMobileProduct),
+      whatsappPhone: await getWhatsAppPhone(),
+    },
+    { headers: mobilePublicHeaders },
+  );
 }
