@@ -22,7 +22,7 @@ celular/emulador. No emulador Android, o computador costuma ser `10.0.2.2`.
 
 ## Sincronizar e abrir no Android Studio
 
-Instale também o Android Studio com o Android SDK 36 e JDK 17.
+Instale também o Android Studio com o Android SDK 36 e JDK 21.
 
 ```bash
 cd mobile
