@@ -9,6 +9,10 @@ import {
   toMobileCategory,
   toMobileProduct,
 } from "@/lib/mobile-api";
+import {
+  combinarCategorias,
+  combinarProdutos,
+} from "@/data/produtos-recebidos";
 
 export const dynamic = "force-dynamic";
 
@@ -28,39 +32,44 @@ export async function GET(
     );
   }
 
+  let productRows: (typeof products.$inferSelect)[] = [];
+  let categoryList: (typeof categories.$inferSelect)[] = [];
   try {
     const db = getDb();
-    const [rows, whatsappPhone] = await Promise.all([
+    [productRows, categoryList] = await Promise.all([
       db
-        .select({ product: products, category: categories })
+        .select()
         .from(products)
-        .leftJoin(categories, eq(products.categoryId, categories.id))
         .where(and(eq(products.slug, slug), eq(products.active, true)))
         .limit(1),
-      getWhatsAppPhone(),
+      db.select().from(categories).orderBy(categories.position),
     ]);
-    const row = rows[0];
-
-    if (!row) {
-      return NextResponse.json(
-        { error: "Produto não encontrado." },
-        { status: 404, headers: mobilePublicHeaders },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        product: toMobileProduct(row.product),
-        category: row.category ? toMobileCategory(row.category) : null,
-        whatsappPhone,
-      },
-      { headers: mobilePublicHeaders },
-    );
   } catch (error) {
     console.error(`[api/mobile/produtos/${slug}] banco indisponível:`, error);
+  }
+
+  const allCategories = combinarCategorias(categoryList);
+  const product = combinarProdutos(productRows, allCategories).find(
+    (item) => item.slug === slug,
+  );
+
+  if (!product) {
     return NextResponse.json(
-      { error: "Não foi possível carregar o produto agora." },
-      { status: 503, headers: mobilePublicHeaders },
+      { error: "Produto não encontrado." },
+      { status: 404, headers: mobilePublicHeaders },
     );
   }
+
+  const category = product.categoryId
+    ? allCategories.find((item) => item.id === product.categoryId) ?? null
+    : null;
+
+  return NextResponse.json(
+    {
+      product: toMobileProduct(product),
+      category: category ? toMobileCategory(category) : null,
+      whatsappPhone: await getWhatsAppPhone(),
+    },
+    { headers: mobilePublicHeaders },
+  );
 }

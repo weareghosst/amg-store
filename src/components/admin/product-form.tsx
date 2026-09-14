@@ -121,6 +121,7 @@ export function ProductForm({
         <div>
           <label htmlFor="p-price" className={labelClass}>Preço (R$)</label>
           <input id="p-price" name="price" required defaultValue={defaults.price} placeholder="19,90" inputMode="decimal" className={inputClass} />
+          <p className="mt-1 text-xs text-slate-500">Use 0 para mostrar &quot;Consulte pelo WhatsApp&quot;.</p>
         </div>
         <div>
           <label htmlFor="p-compare" className={labelClass}>Preço &quot;de&quot; (opcional)</label>

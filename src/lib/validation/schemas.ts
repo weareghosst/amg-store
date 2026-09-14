@@ -50,7 +50,10 @@ export const productFormSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug inválido (use letras, números e hífens)."),
   description: z.string().trim().max(8000).default(""),
   sku: z.string().trim().max(60).optional().or(z.literal("")),
-  priceCents: z.number().int().min(1, "Preço deve ser maior que zero."),
+  priceCents: z
+    .number()
+    .int()
+    .min(0, "Preço não pode ser negativo."),
   comparePriceCents: z.number().int().min(0).nullable(),
   stock: z.number().int().min(0, "Estoque não pode ser negativo."),
   categoryId: z.uuid().nullable(),

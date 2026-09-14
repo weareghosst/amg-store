@@ -1,8 +1,12 @@
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { ProductCard } from "@/components/product-card";
+import {
+  combinarCategorias,
+  combinarProdutos,
+} from "@/data/produtos-recebidos";
 
 export const dynamic = "force-dynamic";
 
@@ -26,31 +30,30 @@ export default async function ProductsPage({
       .from(categories)
       .orderBy(categories.position);
 
-    const activeCategory = categoryList.find((c) => c.slug === categorySlug);
-
-    const conditions = [eq(products.active, true)];
-    if (activeCategory) {
-      conditions.push(eq(products.categoryId, activeCategory.id));
-    }
-    if (q) {
-      const query = or(
-        ilike(products.name, `%${q}%`),
-        ilike(products.description, `%${q}%`),
-      );
-      if (query) conditions.push(query);
-    }
-
     productList = await db
       .select()
       .from(products)
-      .where(and(...conditions))
+      .where(eq(products.active, true))
       .orderBy(desc(products.createdAt))
-      .limit(60);
+      .limit(200);
   } catch (err) {
     console.error("[produtos] banco indisponível:", err);
   }
 
+  categoryList = combinarCategorias(categoryList);
+  productList = combinarProdutos(productList, categoryList);
+
   const activeCategory = categoryList.find((c) => c.slug === categorySlug);
+  const termo = q.trim().toLocaleLowerCase("pt-BR");
+  productList = productList
+    .filter((produto) => !activeCategory || produto.categoryId === activeCategory.id)
+    .filter((produto) => {
+      if (!termo) return true;
+      return `${produto.name} ${produto.description} ${produto.sku ?? ""}`
+        .toLocaleLowerCase("pt-BR")
+        .includes(termo);
+    })
+    .slice(0, 60);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">

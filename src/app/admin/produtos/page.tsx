@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/guards";
 import { formatBRL } from "@/lib/money";
+import { ImportarProdutosButton } from "./importar-produtos-button";
 
 export const metadata = { title: "Produtos — Admin" };
 
@@ -30,12 +31,15 @@ export default async function AdminProductsPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Produtos</h1>
-        <Link
-          href="/admin/produtos/novo"
-          className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-dark"
-        >
-          + Novo produto
-        </Link>
+        <div className="flex flex-wrap items-start justify-end gap-2">
+          <ImportarProdutosButton />
+          <Link
+            href="/admin/produtos/novo"
+            className="rounded-lg bg-brand-blue px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-blue-dark"
+          >
+            + Novo produto
+          </Link>
+        </div>
       </div>
 
       {usingFallback && (
@@ -77,9 +81,11 @@ export default async function AdminProductsPage() {
                   )}
                 </td>
                 <td className="px-4 py-3 text-slate-500">{category?.name ?? "—"}</td>
-                <td className="px-4 py-3 font-medium">{formatBRL(product.priceCents)}</td>
-                <td className={`px-4 py-3 font-medium ${product.stock <= 5 ? "text-red-600" : ""}`}>
-                  {product.stock}
+                <td className="px-4 py-3 font-medium">
+                  {product.priceCents <= 0 ? "Consultar" : formatBRL(product.priceCents)}
+                </td>
+                <td className={`px-4 py-3 font-medium ${product.priceCents > 0 && product.stock <= 5 ? "text-red-600" : ""}`}>
+                  {product.priceCents <= 0 ? "A confirmar" : product.stock}
                 </td>
                 <td className="px-4 py-3">
                   {product.active ? (
