@@ -5,6 +5,7 @@ import { categories, products } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/guards";
 import { formatBRL } from "@/lib/money";
 import { ImportarProdutosButton } from "./importar-produtos-button";
+import { sincronizarProdutosRecebidos } from "@/lib/sincronizar-produtos-recebidos";
 
 export const metadata = { title: "Produtos — Admin" };
 
@@ -15,6 +16,7 @@ export default async function AdminProductsPage() {
   let usingFallback = false;
 
   try {
+    await sincronizarProdutosRecebidos();
     const db = getDb();
     rows = await db
       .select({ product: products, category: categories })
@@ -84,8 +86,8 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-3 font-medium">
                   {product.priceCents <= 0 ? "Consultar" : formatBRL(product.priceCents)}
                 </td>
-                <td className={`px-4 py-3 font-medium ${product.priceCents > 0 && product.stock <= 5 ? "text-red-600" : ""}`}>
-                  {product.priceCents <= 0 ? "A confirmar" : product.stock}
+                <td className={`px-4 py-3 font-medium ${product.stock <= 5 ? "text-red-600" : ""}`}>
+                  {product.stock}
                 </td>
                 <td className="px-4 py-3">
                   {product.active ? (

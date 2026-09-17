@@ -13,6 +13,7 @@ import {
   combinarCategorias,
   combinarProdutos,
 } from "@/data/produtos-recebidos";
+import { sincronizarProdutosRecebidos } from "@/lib/sincronizar-produtos-recebidos";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
   let categoryList: (typeof categories.$inferSelect)[] = [];
   let databaseProducts: (typeof products.$inferSelect)[] = [];
   try {
+    await sincronizarProdutosRecebidos();
     const db = getDb();
     [categoryList, databaseProducts] = await Promise.all([
       db

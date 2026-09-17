@@ -24,6 +24,13 @@ export const categoriasRecebidas: Category[] = [
     position: 30,
     createdAt: DATA_RECEBIMENTO,
   },
+  {
+    id: "20000000-0000-4000-8000-000000000004",
+    name: "Amaciantes",
+    slug: "amaciantes",
+    position: 40,
+    createdAt: DATA_RECEBIMENTO,
+  },
 ];
 
 export interface ProdutoRecebido {
@@ -155,29 +162,29 @@ export const produtosRecebidos: ProdutoRecebido[] = [
   },
   {
     id: "10000000-0000-4000-8000-000000000014",
-    name: "Ypê Bak Floral",
+    name: "Ypê Bak Rosa",
     slug: "ype-bak-floral",
     description:
-      "Desinfetante indicado para a limpeza e higienização de pisos e superfícies laváveis, com fragrância floral agradável.",
-    imageUrl: "/produtos/ype-bak-variantes.jpg",
+      "Desinfetante 3 em 1 indicado para perfumar, desinfetar e limpar pisos e superfícies laváveis.",
+    imageUrl: "/produtos/ype-bak-rosa.webp",
     categoriaSlug: "desinfetantes",
   },
   {
     id: "10000000-0000-4000-8000-000000000015",
-    name: "Ypê Bak Lavanda",
+    name: "Ypê Bak Roxo",
     slug: "ype-bak-lavanda",
     description:
-      "Desinfetante para a limpeza e higienização de diferentes ambientes, indicado para pisos e outras superfícies laváveis.",
-    imageUrl: "/produtos/ype-bak-variantes.jpg",
+      "Desinfetante 3 em 1 para a limpeza e higienização de diferentes ambientes, indicado para pisos e outras superfícies laváveis.",
+    imageUrl: "/produtos/ype-bak-roxo.webp",
     categoriaSlug: "desinfetantes",
   },
   {
     id: "10000000-0000-4000-8000-000000000016",
-    name: "Ypê Bak Eucalipto",
+    name: "Ypê Bak Turquesa 500 ml",
     slug: "ype-bak-eucalipto",
     description:
-      "Desinfetante indicado para a rotina de limpeza de pisos e superfícies laváveis, com fragrância de eucalipto.",
-    imageUrl: "/produtos/ype-bak-variantes.jpg",
+      "Desinfetante 3 em 1 indicado para perfumar, desinfetar e limpar pisos e superfícies laváveis. Embalagem de 500 ml.",
+    imageUrl: "/produtos/ype-bak-turquesa.webp",
     categoriaSlug: "desinfetantes",
   },
   {
@@ -186,8 +193,44 @@ export const produtosRecebidos: ProdutoRecebido[] = [
     slug: "ype-bak-branco",
     description:
       "Desinfetante indicado para limpeza e higienização de pisos e superfícies laváveis, ajudando a manter os ambientes limpos e agradáveis.",
-    imageUrl: "/produtos/ype-bak-variantes.jpg",
+    imageUrl: "/produtos/ype-bak-branco.webp",
     categoriaSlug: "desinfetantes",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000018",
+    name: "Coala Amaciante Concentrado Chá Branco 1 L",
+    slug: "coala-amaciante-concentrado-cha-branco-1l",
+    description:
+      "Amaciante de roupas concentrado com fragrância Chá Branco. Embalagem de 1 litro com rendimento de até 50 lavagens.",
+    imageUrl: "/produtos/coala-amaciante-cha-branco.webp",
+    categoriaSlug: "amaciantes",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000019",
+    name: "Coala Amaciante Concentrado Orquídea Negra 1 L",
+    slug: "coala-amaciante-concentrado-orquidea-negra-1l",
+    description:
+      "Amaciante de roupas concentrado com fragrância Orquídea Negra. Embalagem de 1 litro com rendimento de até 50 lavagens.",
+    imageUrl: "/produtos/coala-amaciante-orquidea-negra.webp",
+    categoriaSlug: "amaciantes",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000020",
+    name: "Coala Amaciante Concentrado Sol do Brasil 1 L",
+    slug: "coala-amaciante-concentrado-sol-do-brasil-1l",
+    description:
+      "Amaciante de roupas concentrado com fragrância Sol do Brasil. Embalagem de 1 litro com rendimento de até 50 lavagens.",
+    imageUrl: "/produtos/coala-amaciante-sol-do-brasil.webp",
+    categoriaSlug: "amaciantes",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000021",
+    name: "Coala Amaciante Concentrado The Queen 1 L",
+    slug: "coala-amaciante-concentrado-the-queen-1l",
+    description:
+      "Amaciante de roupas concentrado com fragrância The Queen. Embalagem de 1 litro com rendimento de até 50 lavagens.",
+    imageUrl: "/produtos/coala-amaciante-the-queen.webp",
+    categoriaSlug: "amaciantes",
   },
 ];
 
@@ -210,7 +253,7 @@ export function montarProdutosRecebidos(categorias: Category[]): Product[] {
     sku: null,
     priceCents: 0,
     comparePriceCents: null,
-    stock: 0,
+    stock: 10,
     categoryId: categoriaPorSlug.get(produto.categoriaSlug)?.id ?? null,
     imageUrl: produto.imageUrl,
     active: true,

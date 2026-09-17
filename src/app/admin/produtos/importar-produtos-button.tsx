@@ -25,7 +25,7 @@ export function ImportarProdutosButton() {
         disabled={pending}
         className="rounded-lg border border-brand-blue px-4 py-2 text-sm font-semibold text-brand-blue transition hover:bg-brand-blue/5 disabled:cursor-wait disabled:opacity-60"
       >
-        {pending ? "Importando..." : "Importar produtos recebidos"}
+        {pending ? "Sincronizando..." : "Sincronizar produtos e fotos"}
       </button>
       {message && <p className="max-w-xs text-right text-xs text-slate-500">{message}</p>}
     </div>

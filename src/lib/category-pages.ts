@@ -28,6 +28,7 @@ export const CATEGORY_PAGES: Record<string, CategoryPageConfig> = {
       "limpadores-perfumados",
       "limpadores-multiuso",
       "desinfetantes",
+      "amaciantes",
     ],
   },
   epi: {
