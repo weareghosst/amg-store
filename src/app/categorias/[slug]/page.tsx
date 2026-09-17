@@ -1,10 +1,14 @@
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { ProductCard } from "@/components/product-card";
 import { CategoryHero } from "@/components/category-hero";
 import { CATEGORY_PAGES } from "@/lib/category-pages";
+import {
+  combinarCategorias,
+  combinarProdutos,
+} from "@/data/produtos-recebidos";
 
 export const dynamic = "force-dynamic";
 
@@ -27,35 +31,38 @@ export default async function CategoryPage({
   if (!page) notFound();
 
   let productList: (typeof products.$inferSelect)[] = [];
+  let categoryList: (typeof categories.$inferSelect)[] = [];
   try {
     const db = getDb();
-    if (slug === "todos-produtos") {
-      productList = await db
+    [productList, categoryList] = await Promise.all([
+      db
         .select()
         .from(products)
         .where(eq(products.active, true))
         .orderBy(desc(products.createdAt))
-        .limit(60);
-    } else {
-      const [category] = await db
-        .select()
-        .from(categories)
-        .where(eq(categories.slug, slug))
-        .limit(1);
-      if (category) {
-        productList = await db
-          .select()
-          .from(products)
-          .where(and(eq(products.active, true), eq(products.categoryId, category.id)))
-          .orderBy(desc(products.createdAt))
-          .limit(60);
-      }
-    }
+        .limit(200),
+      db.select().from(categories).orderBy(categories.position),
+    ]);
   } catch (err) {
     console.error(`[categorias/${slug}] banco indisponível:`, err);
   }
 
-  const visibleProductList = productList;
+  categoryList = combinarCategorias(categoryList);
+  productList = combinarProdutos(productList, categoryList);
+
+  const includedSlugs = new Set([slug, ...(page.includedCategorySlugs ?? [])]);
+  const includedCategoryIds = new Set(
+    categoryList
+      .filter((category) => includedSlugs.has(category.slug))
+      .map((category) => category.id),
+  );
+  const visibleProductList = (
+    slug === "todos-produtos"
+      ? productList
+      : productList.filter((product) =>
+          product.categoryId ? includedCategoryIds.has(product.categoryId) : false,
+        )
+  ).slice(0, 60);
 
   return (
     <div>
