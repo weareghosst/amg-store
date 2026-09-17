@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getDb } from "@/db";
@@ -15,10 +15,7 @@ import {
   productFormSchema,
 } from "@/lib/validation/schemas";
 import { saveStoreSettings, storeSettingsSchema } from "@/lib/settings";
-import {
-  categoriasRecebidas,
-  produtosRecebidos,
-} from "@/data/produtos-recebidos";
+import { sincronizarProdutosRecebidos } from "@/lib/sincronizar-produtos-recebidos";
 
 export interface AdminActionState {
   error?: string;
@@ -175,49 +172,16 @@ export async function deleteProductAction(productId: string): Promise<AdminActio
 
 export async function importarProdutosRecebidosAction(): Promise<AdminActionState> {
   const admin = await assertAdmin();
-  const db = getDb();
-
-  await db
-    .insert(categories)
-    .values(
-      categoriasRecebidas.map(({ name, slug, position }) => ({
-        name,
-        slug,
-        position,
-      })),
-    )
-    .onConflictDoNothing({ target: categories.slug });
-
-  const categoryRows = await db
-    .select({ id: categories.id, slug: categories.slug })
-    .from(categories)
-    .where(inArray(categories.slug, categoriasRecebidas.map((item) => item.slug)));
-  const categoryIdBySlug = new Map(
-    categoryRows.map((category) => [category.slug, category.id]),
-  );
-
-  const inserted = await db
-    .insert(products)
-    .values(
-      produtosRecebidos.map((product) => ({
-        name: product.name,
-        slug: product.slug,
-        description: product.description,
-        priceCents: 0,
-        stock: 0,
-        categoryId: categoryIdBySlug.get(product.categoriaSlug) ?? null,
-        imageUrl: product.imageUrl,
-        active: true,
-      })),
-    )
-    .onConflictDoNothing({ target: products.slug })
-    .returning({ id: products.id });
+  const result = await sincronizarProdutosRecebidos();
 
   await audit({
     userId: admin.id,
     action: "catalogo.importar_produtos_recebidos",
     entity: "product",
-    detail: { produtosAdicionados: inserted.length },
+    detail: {
+      produtosAdicionados: result.adicionados,
+      produtosAtualizados: result.atualizados,
+    },
     ip: await getRequestIp(),
   });
   revalidatePath("/");
@@ -226,9 +190,9 @@ export async function importarProdutosRecebidosAction(): Promise<AdminActionStat
 
   return {
     success:
-      inserted.length > 0
-        ? `${inserted.length} produtos importados com sucesso.`
-        : "Os produtos recebidos já estavam cadastrados.",
+      result.jaEstavaAtualizado
+        ? "Os produtos e as fotos já estão atualizados."
+        : `${result.adicionados} produtos adicionados e ${result.atualizados} atualizados.`,
   };
 }
 
