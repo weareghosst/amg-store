@@ -8,6 +8,7 @@ export type CategoryPageConfig = {
   title: string;
   tagline: string;
   background: string;
+  includedCategorySlugs?: string[];
   accent?: {
     from: string;
     via: string;
@@ -23,6 +24,11 @@ export const CATEGORY_PAGES: Record<string, CategoryPageConfig> = {
     tagline:
       "Produtos para manter ambientes limpos, organizados e bem cuidados: químicos, descartáveis e itens para sua rotina.",
     background: "/background-limpeza&higiene.png",
+    includedCategorySlugs: [
+      "limpadores-perfumados",
+      "limpadores-multiuso",
+      "desinfetantes",
+    ],
   },
   epi: {
     title: "EPI",
