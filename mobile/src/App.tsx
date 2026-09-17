@@ -89,7 +89,8 @@ function ProductCard({
   favorite: boolean;
   onToggleFavorite: () => void;
 }) {
-  const unavailable = product.stock <= 0;
+  const priceOnRequest = product.priceCents <= 0;
+  const unavailable = !priceOnRequest && product.stock <= 0;
   return (
     <article
       className="product-card"
@@ -108,10 +109,10 @@ function ProductCard({
       <div className="product-card-body">
         <h3>{product.name}</h3>
         <div className="price-row">
-          {product.comparePriceCents && product.comparePriceCents > product.priceCents ? (
+          {!priceOnRequest && product.comparePriceCents && product.comparePriceCents > product.priceCents ? (
             <span className="old-price">{money(product.comparePriceCents)}</span>
           ) : null}
-          <strong>{money(product.priceCents)}</strong>
+          <strong className={priceOnRequest ? "price-on-request" : undefined}>{priceOnRequest ? "Consulte pelo WhatsApp" : money(product.priceCents)}</strong>
         </div>
       </div>
     </article>
@@ -276,8 +277,11 @@ function FavoritesScreen({ catalog, favorites, toggleFavorite }: { catalog: Cata
 
 function ProductScreen({ product, category, whatsappPhone, favorite, toggleFavorite }: { product: Product; category: Category | null; whatsappPhone: string; favorite: boolean; toggleFavorite: () => void }) {
   const productUrl = `${API_URL}/produtos/${product.slug}`;
+  const priceOnRequest = product.priceCents <= 0;
+  const unavailable = !priceOnRequest && product.stock <= 0;
   const buy = async () => {
-    const message = `Olá! Vim pelo aplicativo da AMG e tenho interesse neste produto:\n\n${product.name}${product.sku ? ` (cód. ${product.sku})` : ""}\nPreço anunciado: ${money(product.priceCents)}\n${productUrl}\n\nPode me passar mais informações?`;
+    const priceLine = priceOnRequest ? "" : `\nPreço anunciado: ${money(product.priceCents)}`;
+    const message = `Olá! Vim pelo aplicativo da AMG e tenho interesse neste produto:\n\n${product.name}${product.sku ? ` (cód. ${product.sku})` : ""}${priceLine}\n${productUrl}\n\nPode me passar o preço e mais informações?`;
     const phone = whatsappPhone.replace(/\D/g, "");
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     await Browser.open({ url });
@@ -288,13 +292,13 @@ function ProductScreen({ product, category, whatsappPhone, favorite, toggleFavor
   return (
     <main className="product-screen">
       <div className="detail-actions"><button type="button" onClick={() => history.back()} aria-label="Voltar"><ArrowLeftIcon/></button><div><button type="button" onClick={() => void share()} aria-label="Compartilhar"><ShareIcon/></button><FavoriteButton active={favorite} onClick={toggleFavorite}/></div></div>
-      <div className="detail-image"><ProductImage product={product}/>{product.stock <= 0 && <span className="stock-badge">Esgotado</span>}</div>
+      <div className="detail-image"><ProductImage product={product}/>{unavailable && <span className="stock-badge">Esgotado</span>}</div>
       <div className="detail-content">
         {category && <span className="category-label">{category.name}</span>}
         {product.sku && <span className="sku">SKU {product.sku}</span>}
         <h1>{product.name}</h1>
-        <div className="detail-price">{product.comparePriceCents && product.comparePriceCents > product.priceCents ? <span>{money(product.comparePriceCents)}</span> : null}<strong>{money(product.priceCents)}</strong></div>
-        <button className="whatsapp-cta" type="button" disabled={!whatsappPhone || product.stock <= 0} onClick={() => void buy()}>{product.stock <= 0 ? "Produto esgotado" : "Comprar pelo WhatsApp"}</button>
+        <div className="detail-price">{!priceOnRequest && product.comparePriceCents && product.comparePriceCents > product.priceCents ? <span>{money(product.comparePriceCents)}</span> : null}<strong className={priceOnRequest ? "price-on-request" : undefined}>{priceOnRequest ? "Consulte o preço pelo WhatsApp" : money(product.priceCents)}</strong></div>
+        <button className="whatsapp-cta" type="button" disabled={!whatsappPhone || unavailable} onClick={() => void buy()}>{unavailable ? "Produto esgotado" : priceOnRequest ? "Consultar pelo WhatsApp" : "Comprar pelo WhatsApp"}</button>
         <div className="delivery-card"><span>🚚</span><div><strong>Entrega e retirada</strong><p>Entrega própria em São Paulo ou retirada na loja. Outros estados sob consulta.</p></div></div>
         {product.description && <section className="description"><h2>Sobre o produto</h2><p>{product.description}</p></section>}
       </div>

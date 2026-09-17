@@ -4,7 +4,8 @@ import { formatBRL } from "@/lib/money";
 import type { Product } from "@/db/schema";
 
 export function ProductCard({ product }: { product: Product }) {
-  const outOfStock = product.stock <= 0;
+  const priceOnRequest = product.priceCents <= 0;
+  const outOfStock = !priceOnRequest && product.stock <= 0;
   return (
     <Link
       href={`/produtos/${product.slug}`}
@@ -41,13 +42,13 @@ export function ProductCard({ product }: { product: Product }) {
           {product.name}
         </h3>
         <div className="mt-auto pt-1">
-          {product.comparePriceCents && product.comparePriceCents > product.priceCents && (
+          {!priceOnRequest && product.comparePriceCents && product.comparePriceCents > product.priceCents && (
             <span className="mr-2 text-xs text-slate-400 line-through">
               {formatBRL(product.comparePriceCents)}
             </span>
           )}
-          <span className="text-lg font-bold text-brand-blue">
-            {formatBRL(product.priceCents)}
+          <span className="text-base font-bold text-brand-blue sm:text-lg">
+            {priceOnRequest ? "Consulte pelo WhatsApp" : formatBRL(product.priceCents)}
           </span>
         </div>
       </div>

@@ -7,6 +7,10 @@ import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { ProductCard } from "@/components/product-card";
 import { categoryHref } from "@/lib/category-pages";
+import {
+  combinarCategorias,
+  combinarProdutos,
+} from "@/data/produtos-recebidos";
 
 export const dynamic = "force-dynamic";
 
@@ -24,14 +28,15 @@ export default async function HomePage() {
         .from(products)
         .where(eq(products.active, true))
         .orderBy(desc(products.createdAt))
-        .limit(8),
-      db.select().from(categories).orderBy(categories.position).limit(8),
+        .limit(100),
+      db.select().from(categories).orderBy(categories.position),
     ]);
   } catch (err) {
     console.error("[home] banco indisponível:", err);
   }
 
-  const visibleFeatured = featured;
+  categoryList = combinarCategorias(categoryList).slice(0, 8);
+  const visibleFeatured = combinarProdutos(featured, categoryList).slice(0, 8);
 
   return (
     <div className="overflow-x-hidden">
