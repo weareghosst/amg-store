@@ -52,6 +52,19 @@ export const mobilePublicHeaders = {
   Vary: "Origin",
 } as const;
 
+/** Cabeçalhos usados pelas rotas autenticadas do aplicativo Android. */
+export const mobileAuthHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Cache-Control": "no-store",
+  Vary: "Origin",
+} as const;
+
 export function mobileOptionsResponse(): Response {
   return new Response(null, { status: 204, headers: mobilePublicHeaders });
+}
+
+export function mobileAuthOptionsResponse(): Response {
+  return new Response(null, { status: 204, headers: mobileAuthHeaders });
 }

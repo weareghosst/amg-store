@@ -5,21 +5,33 @@ import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Share } from "@capacitor/share";
 import { StatusBar, Style } from "@capacitor/status-bar";
-import { API_URL, getCachedCatalog, getCatalog, productImageUrl } from "./api";
+import {
+  API_URL,
+  clearStoredSession,
+  getCachedCatalog,
+  getCatalog,
+  getStoredSession,
+  login,
+  logout,
+  productImageUrl,
+  refreshSession,
+} from "./api";
 import {
   ArrowLeftIcon,
   GridIcon,
   HeartIcon,
   HomeIcon,
   ImageIcon,
+  LogOutIcon,
   RefreshIcon,
   SearchIcon,
   ShareIcon,
+  UserIcon,
 } from "./icons";
-import type { CatalogResponse, Category, Product } from "./types";
+import type { AuthSession, CatalogResponse, Category, Product } from "./types";
 import { useFavorites } from "./use-favorites";
 
-type Tab = "inicio" | "catalogo" | "favoritos";
+type Tab = "inicio" | "catalogo" | "favoritos" | "conta";
 
 function money(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", {
@@ -157,12 +169,14 @@ function HomeScreen({
   favorites,
   toggleFavorite,
   selectCategory,
+  session,
 }: {
   catalog: CatalogResponse | null;
   loading: boolean;
   favorites: string[];
   toggleFavorite: (id: string) => void;
   selectCategory: (slug: string) => void;
+  session: AuthSession | null;
 }) {
   return (
     <>
@@ -171,9 +185,9 @@ function HomeScreen({
         <button
           type="button"
           className="login-button"
-          onClick={() => void Browser.open({ url: `${API_URL}/entrar` })}
+          onClick={() => goTo("conta")}
         >
-          Entrar
+          {session ? session.user.name.split(" ")[0] : "Entrar"}
         </button>
       </header>
       <div className="info-strip">
@@ -215,6 +229,120 @@ function HomeScreen({
           <div className="section-title"><div><span className="eyebrow dark">Recém-chegados</span><h2>Novidades</h2></div><button type="button" onClick={() => goTo("catalogo")}>Ver todos</button></div>
           {loading && !catalog ? <LoadingCards /> : <ProductGrid products={(catalog?.products ?? []).slice(0, 8)} favorites={favorites} toggleFavorite={toggleFavorite} emptyMessage="Nenhum produto cadastrado ainda." />}
         </section>
+      </main>
+    </>
+  );
+}
+
+function AccountScreen({
+  session,
+  checking,
+  onLogin,
+  onLogout,
+}: {
+  session: AuthSession | null;
+  checking: boolean;
+  onLogin: (email: string, password: string) => Promise<void>;
+  onLogout: () => Promise<void>;
+}) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage("");
+    try {
+      await onLogin(email, password);
+      setPassword("");
+    } catch (reason) {
+      setMessage(reason instanceof Error ? reason.message : "Não foi possível entrar.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const leave = async () => {
+    setSubmitting(true);
+    setMessage("");
+    try {
+      await onLogout();
+    } catch {
+      setMessage("Você saiu da conta neste aparelho.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      <header className="topbar"><Logo /><span className="result-count">Minha conta</span></header>
+      <main className="screen account-screen">
+        {checking ? (
+          <div className="account-loading"><div className="account-spinner" /><p>Verificando sua conta...</p></div>
+        ) : session ? (
+          <>
+            <section className="profile-card">
+              <div className="profile-avatar"><UserIcon /></div>
+              <div><span>Olá,</span><h1>{session.user.name}</h1><p>{session.user.email}</p></div>
+            </section>
+            <section className="account-info">
+              <h2>Dados da conta</h2>
+              <div><span>Nome</span><strong>{session.user.name}</strong></div>
+              <div><span>E-mail</span><strong>{session.user.email}</strong></div>
+              {session.user.phone ? <div><span>Telefone</span><strong>{session.user.phone}</strong></div> : null}
+            </section>
+            <button className="logout-button" type="button" disabled={submitting} onClick={() => void leave()}>
+              <LogOutIcon /> {submitting ? "Saindo..." : "Sair da conta"}
+            </button>
+            {message ? <p className="form-message" role="status">{message}</p> : null}
+          </>
+        ) : (
+          <section className="login-panel">
+            <div className="login-heading">
+              <div className="login-symbol"><UserIcon /></div>
+              <span className="eyebrow dark">Área do cliente</span>
+              <h1>Entre na sua conta</h1>
+              <p>Use o mesmo e-mail e senha cadastrados no site da AMG.</p>
+            </div>
+            <form className="login-form" onSubmit={(event) => void submit(event)}>
+              <label>
+                <span>E-mail</span>
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  autoComplete="email"
+                  placeholder="seuemail@exemplo.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                <span>Senha</span>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="Digite sua senha"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                />
+              </label>
+              {message ? <p className="form-error" role="alert">{message}</p> : null}
+              <button className="submit-login" type="submit" disabled={submitting}>
+                {submitting ? "Entrando..." : "Entrar"}
+              </button>
+            </form>
+            <button className="forgot-link" type="button" onClick={() => void Browser.open({ url: `${API_URL}/recuperar-senha` })}>
+              Esqueci minha senha
+            </button>
+          </section>
+        )}
       </main>
     </>
   );
@@ -311,6 +439,7 @@ function BottomNav({ active }: { active: Tab }) {
     { id: "inicio", label: "Início", icon: HomeIcon },
     { id: "catalogo", label: "Produtos", icon: GridIcon },
     { id: "favoritos", label: "Favoritos", icon: HeartIcon },
+    { id: "conta", label: "Conta", icon: UserIcon },
   ];
   return <nav className="bottom-nav">{items.map(({ id, label, icon: Icon }) => <button type="button" key={id} className={active === id ? "active" : ""} onClick={() => goTo(id)}><Icon fill={active === id && id === "favoritos" ? "currentColor" : "none"}/><span>{label}</span></button>)}</nav>;
 }
@@ -321,6 +450,8 @@ export function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [session, setSession] = useState<AuthSession | null>(() => getStoredSession());
+  const [checkingAuth, setCheckingAuth] = useState(() => Boolean(getStoredSession()));
   const { favorites, toggle } = useFavorites();
 
   const load = async () => {
@@ -342,6 +473,16 @@ export function App() {
         setError(reason instanceof Error ? reason.message : "Erro ao carregar o catálogo.");
       })
       .finally(() => setLoading(false));
+    const storedSession = getStoredSession();
+    if (storedSession) {
+      refreshSession(storedSession)
+        .then(setSession)
+        .catch(() => {
+          clearStoredSession();
+          setSession(null);
+        })
+        .finally(() => setCheckingAuth(false));
+    }
     if (Capacitor.isNativePlatform()) void StatusBar.setStyle({ style: Style.Light });
     const backListener = CapacitorApp.addListener("backButton", ({ canGoBack }) => {
       const activeRoute = currentRoute();
@@ -354,8 +495,18 @@ export function App() {
 
   const productSlug = route.startsWith("produto/") ? decodeURIComponent(route.slice("produto/".length)) : "";
   const product = productSlug ? catalog?.products.find((item) => item.slug === productSlug) : undefined;
-  const tab: Tab = route === "catalogo" || route === "favoritos" ? route : "inicio";
+  const tab: Tab = route === "catalogo" || route === "favoritos" || route === "conta" ? route : "inicio";
   const selectCategory = (slug: string) => { setSelectedCategory(slug); goTo("catalogo"); };
+  const handleLogin = async (email: string, password: string) => {
+    const nextSession = await login(email, password);
+    setSession(nextSession);
+    void Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
+  };
+  const handleLogout = async () => {
+    const activeSession = session;
+    setSession(null);
+    if (activeSession) await logout(activeSession);
+  };
 
   if (product) {
     return <ProductScreen product={product} category={catalog?.categories.find((item) => item.id === product.categoryId) ?? null} whatsappPhone={catalog?.whatsappPhone ?? ""} favorite={favorites.includes(product.id)} toggleFavorite={() => toggle(product.id)}/>;
@@ -364,9 +515,10 @@ export function App() {
   return (
     <div className="app-shell">
       {error && <div className="offline-banner"><span>{catalog ? "Mostrando o último catálogo salvo." : error}</span><button type="button" onClick={() => void load()}><RefreshIcon/> Tentar novamente</button></div>}
-      {tab === "inicio" && <HomeScreen catalog={catalog} loading={loading} favorites={favorites} toggleFavorite={toggle} selectCategory={selectCategory}/>} 
-      {tab === "catalogo" && <CatalogScreen catalog={catalog} loading={loading} favorites={favorites} toggleFavorite={toggle} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}/>} 
-      {tab === "favoritos" && <FavoritesScreen catalog={catalog} favorites={favorites} toggleFavorite={toggle}/>} 
+      {tab === "inicio" && <HomeScreen catalog={catalog} loading={loading} favorites={favorites} toggleFavorite={toggle} selectCategory={selectCategory} session={session}/>}
+      {tab === "catalogo" && <CatalogScreen catalog={catalog} loading={loading} favorites={favorites} toggleFavorite={toggle} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}/>}
+      {tab === "favoritos" && <FavoritesScreen catalog={catalog} favorites={favorites} toggleFavorite={toggle}/>}
+      {tab === "conta" && <AccountScreen session={session} checking={checkingAuth} onLogin={handleLogin} onLogout={handleLogout}/>}
       <BottomNav active={tab}/>
     </div>
   );

@@ -23,3 +23,16 @@ export type CatalogResponse = {
   products: Product[];
   whatsappPhone: string;
 };
+
+export type AppUser = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  role: "customer" | "admin";
+};
+
+export type AuthSession = {
+  token: string;
+  user: AppUser;
+};
