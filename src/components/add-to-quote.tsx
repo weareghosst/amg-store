@@ -25,7 +25,7 @@ export function AddToQuote({
       <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2" aria-hidden>
         <circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M3 4h2l2.4 10.2a2 2 0 0 0 2 1.5h7.7a2 2 0 0 0 2-1.6L21 7H6"/>
       </svg>
-      {unavailable ? "Produto esgotado" : quantity ? `Adicionar mais — ${quantity} no orçamento` : "Adicionar ao orçamento"}
+      {unavailable ? "Produto esgotado" : quantity ? `Adicionar mais — ${quantity} no carrinho` : "Adicionar ao carrinho"}
     </button>
   );
 }

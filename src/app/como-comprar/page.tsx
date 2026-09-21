@@ -48,7 +48,7 @@ export default async function ComoComprarPage() {
               categorias disponíveis.
             </li>
             <li>
-              Clique em <strong>&quot;Adicionar ao orçamento&quot;</strong> nos
+              Clique em <strong>&quot;Adicionar ao carrinho&quot;</strong> nos
               produtos desejados e ajuste as quantidades na sua lista.
             </li>
             <li>
