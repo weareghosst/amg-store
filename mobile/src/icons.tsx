@@ -20,3 +20,5 @@ export const RefreshIcon = (props: IconProps) => <IconBase {...props}><path d="M
 export const ImageIcon = (props: IconProps) => <IconBase {...props}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></IconBase>;
 export const UserIcon = (props: IconProps) => <IconBase {...props}><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></IconBase>;
 export const LogOutIcon = (props: IconProps) => <IconBase {...props}><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></IconBase>;
+export const CartIcon = (props: IconProps) => <IconBase {...props}><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M3 4h2l2.4 10.2a2 2 0 0 0 2 1.5h7.7a2 2 0 0 0 2-1.6L21 7H6"/></IconBase>;
+export const TrashIcon = (props: IconProps) => <IconBase {...props}><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 15H6L5 6"/><path d="M10 11v5M14 11v5"/></IconBase>;

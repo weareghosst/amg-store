@@ -18,6 +18,7 @@ import {
 } from "./api";
 import {
   ArrowLeftIcon,
+  CartIcon,
   GridIcon,
   HeartIcon,
   HomeIcon,
@@ -26,12 +27,14 @@ import {
   RefreshIcon,
   SearchIcon,
   ShareIcon,
+  TrashIcon,
   UserIcon,
 } from "./icons";
 import type { AuthSession, CatalogResponse, Category, Product } from "./types";
 import { useFavorites } from "./use-favorites";
+import { useCart } from "./use-cart";
 
-type Tab = "inicio" | "catalogo" | "favoritos" | "conta";
+type Tab = "inicio" | "catalogo" | "favoritos" | "carrinho" | "conta";
 
 function money(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", {
@@ -95,11 +98,15 @@ function FavoriteButton({
 function ProductCard({
   product,
   favorite,
+  cartQuantity,
   onToggleFavorite,
+  onAddToCart,
 }: {
   product: Product;
   favorite: boolean;
+  cartQuantity: number;
   onToggleFavorite: () => void;
+  onAddToCart: () => void;
 }) {
   const priceOnRequest = product.priceCents <= 0;
   const unavailable = !priceOnRequest && product.stock <= 0;
@@ -126,6 +133,18 @@ function ProductCard({
           ) : null}
           <strong className={priceOnRequest ? "price-on-request" : undefined}>{priceOnRequest ? "Consulte pelo WhatsApp" : money(product.priceCents)}</strong>
         </div>
+        <button
+          className={`add-cart-button ${cartQuantity ? "has-items" : ""}`}
+          type="button"
+          disabled={unavailable}
+          onClick={(event) => {
+            event.stopPropagation();
+            void Haptics.impact({ style: ImpactStyle.Light }).catch(() => undefined);
+            onAddToCart();
+          }}
+        >
+          <CartIcon /> {cartQuantity ? `${cartQuantity} no carrinho` : "Adicionar"}
+        </button>
       </div>
     </article>
   );
@@ -134,12 +153,16 @@ function ProductCard({
 function ProductGrid({
   products,
   favorites,
+  cart,
   toggleFavorite,
+  addToCart,
   emptyMessage = "Nenhum produto encontrado.",
 }: {
   products: Product[];
   favorites: string[];
+  cart: Record<string, number>;
   toggleFavorite: (id: string) => void;
+  addToCart: (id: string) => void;
   emptyMessage?: string;
 }) {
   if (!products.length) {
@@ -152,7 +175,9 @@ function ProductGrid({
           key={product.id}
           product={product}
           favorite={favorites.includes(product.id)}
+          cartQuantity={cart[product.id] ?? 0}
           onToggleFavorite={() => toggleFavorite(product.id)}
+          onAddToCart={() => addToCart(product.id)}
         />
       ))}
     </div>
@@ -167,14 +192,18 @@ function HomeScreen({
   catalog,
   loading,
   favorites,
+  cart,
   toggleFavorite,
+  addToCart,
   selectCategory,
   session,
 }: {
   catalog: CatalogResponse | null;
   loading: boolean;
   favorites: string[];
+  cart: Record<string, number>;
   toggleFavorite: (id: string) => void;
+  addToCart: (id: string) => void;
   selectCategory: (slug: string) => void;
   session: AuthSession | null;
 }) {
@@ -227,7 +256,7 @@ function HomeScreen({
 
         <section className="section-block">
           <div className="section-title"><div><span className="eyebrow dark">Recém-chegados</span><h2>Novidades</h2></div><button type="button" onClick={() => goTo("catalogo")}>Ver todos</button></div>
-          {loading && !catalog ? <LoadingCards /> : <ProductGrid products={(catalog?.products ?? []).slice(0, 8)} favorites={favorites} toggleFavorite={toggleFavorite} emptyMessage="Nenhum produto cadastrado ainda." />}
+          {loading && !catalog ? <LoadingCards /> : <ProductGrid products={(catalog?.products ?? []).slice(0, 8)} favorites={favorites} cart={cart} toggleFavorite={toggleFavorite} addToCart={addToCart} emptyMessage="Nenhum produto cadastrado ainda." />}
         </section>
       </main>
     </>
@@ -352,14 +381,18 @@ function CatalogScreen({
   catalog,
   loading,
   favorites,
+  cart,
   toggleFavorite,
+  addToCart,
   selectedCategory,
   setSelectedCategory,
 }: {
   catalog: CatalogResponse | null;
   loading: boolean;
   favorites: string[];
+  cart: Record<string, number>;
   toggleFavorite: (id: string) => void;
+  addToCart: (id: string) => void;
   selectedCategory: string;
   setSelectedCategory: (slug: string) => void;
 }) {
@@ -383,13 +416,13 @@ function CatalogScreen({
           <button type="button" className={!selectedCategory ? "active" : ""} onClick={() => setSelectedCategory("")}>Todos</button>
           {(catalog?.categories ?? []).map((category) => <button type="button" className={selectedCategory === category.slug ? "active" : ""} onClick={() => setSelectedCategory(category.slug)} key={category.id}>{category.name}</button>)}
         </div>
-        {loading && !catalog ? <LoadingCards /> : <ProductGrid products={products} favorites={favorites} toggleFavorite={toggleFavorite} />}
+        {loading && !catalog ? <LoadingCards /> : <ProductGrid products={products} favorites={favorites} cart={cart} toggleFavorite={toggleFavorite} addToCart={addToCart} />}
       </main>
     </>
   );
 }
 
-function FavoritesScreen({ catalog, favorites, toggleFavorite }: { catalog: CatalogResponse | null; favorites: string[]; toggleFavorite: (id: string) => void }) {
+function FavoritesScreen({ catalog, favorites, cart, toggleFavorite, addToCart }: { catalog: CatalogResponse | null; favorites: string[]; cart: Record<string, number>; toggleFavorite: (id: string) => void; addToCart: (id: string) => void }) {
   const products = (catalog?.products ?? []).filter((product) => favorites.includes(product.id));
   return (
     <>
@@ -397,13 +430,13 @@ function FavoritesScreen({ catalog, favorites, toggleFavorite }: { catalog: Cata
       <main className="screen favorites-screen">
         <h1>Meus favoritos</h1>
         <p className="page-intro">Guarde aqui os produtos que você quer encontrar mais rápido.</p>
-        <ProductGrid products={products} favorites={favorites} toggleFavorite={toggleFavorite} emptyMessage="Você ainda não favoritou nenhum produto." />
+        <ProductGrid products={products} favorites={favorites} cart={cart} toggleFavorite={toggleFavorite} addToCart={addToCart} emptyMessage="Você ainda não favoritou nenhum produto." />
       </main>
     </>
   );
 }
 
-function ProductScreen({ product, category, whatsappPhone, favorite, toggleFavorite }: { product: Product; category: Category | null; whatsappPhone: string; favorite: boolean; toggleFavorite: () => void }) {
+function ProductScreen({ product, category, whatsappPhone, favorite, cartQuantity, toggleFavorite, addToCart }: { product: Product; category: Category | null; whatsappPhone: string; favorite: boolean; cartQuantity: number; toggleFavorite: () => void; addToCart: () => void }) {
   const productUrl = `${API_URL}/produtos/${product.slug}`;
   const priceOnRequest = product.priceCents <= 0;
   const unavailable = !priceOnRequest && product.stock <= 0;
@@ -426,7 +459,12 @@ function ProductScreen({ product, category, whatsappPhone, favorite, toggleFavor
         {product.sku && <span className="sku">SKU {product.sku}</span>}
         <h1>{product.name}</h1>
         <div className="detail-price">{!priceOnRequest && product.comparePriceCents && product.comparePriceCents > product.priceCents ? <span>{money(product.comparePriceCents)}</span> : null}<strong className={priceOnRequest ? "price-on-request" : undefined}>{priceOnRequest ? "Consulte o preço pelo WhatsApp" : money(product.priceCents)}</strong></div>
-        <button className="whatsapp-cta" type="button" disabled={!whatsappPhone || unavailable} onClick={() => void buy()}>{unavailable ? "Produto esgotado" : priceOnRequest ? "Consultar pelo WhatsApp" : "Comprar pelo WhatsApp"}</button>
+        <button className="add-cart-detail" type="button" disabled={unavailable} onClick={() => {
+          addToCart();
+          void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => undefined);
+        }}><CartIcon /> {unavailable ? "Produto esgotado" : cartQuantity ? `Adicionar mais — ${cartQuantity} no carrinho` : "Adicionar ao carrinho"}</button>
+        {cartQuantity ? <button className="view-cart-link" type="button" onClick={() => goTo("carrinho")}>Ver meu carrinho</button> : null}
+        <button className="whatsapp-cta secondary" type="button" disabled={!whatsappPhone || unavailable} onClick={() => void buy()}>{priceOnRequest ? "Consultar somente este produto" : "Comprar somente este produto"}</button>
         <div className="delivery-card"><span>🚚</span><div><strong>Entrega e retirada</strong><p>Entrega própria em São Paulo ou retirada na loja. Outros estados sob consulta.</p></div></div>
         {product.description && <section className="description"><h2>Sobre o produto</h2><p>{product.description}</p></section>}
       </div>
@@ -434,14 +472,95 @@ function ProductScreen({ product, category, whatsappPhone, favorite, toggleFavor
   );
 }
 
-function BottomNav({ active }: { active: Tab }) {
+function CartScreen({
+  catalog,
+  cart,
+  session,
+  changeQuantity,
+  remove,
+  clear,
+}: {
+  catalog: CatalogResponse | null;
+  cart: Record<string, number>;
+  session: AuthSession | null;
+  changeQuantity: (id: string, quantity: number) => void;
+  remove: (id: string) => void;
+  clear: () => void;
+}) {
+  const items = (catalog?.products ?? [])
+    .filter((product) => Boolean(cart[product.id]))
+    .map((product) => ({ product, quantity: cart[product.id] }));
+  const knownTotal = items.reduce(
+    (total, item) => total + (item.product.priceCents > 0 ? item.product.priceCents * item.quantity : 0),
+    0,
+  );
+  const hasPriceOnRequest = items.some((item) => item.product.priceCents <= 0);
+
+  const sendQuote = async () => {
+    const phone = (catalog?.whatsappPhone ?? "").replace(/\D/g, "");
+    if (!phone || !items.length) return;
+    const products = items.map(({ product, quantity }) =>
+      `• ${quantity}x ${product.name}${product.sku ? ` (cód. ${product.sku})` : ""}`,
+    );
+    const customer = session ? `\nNome: ${session.user.name}` : "";
+    const total = knownTotal > 0
+      ? `\n\n${hasPriceOnRequest ? "Total parcial dos itens com preço" : "Total estimado"}: ${money(knownTotal)}`
+      : "";
+    const note = hasPriceOnRequest ? "\nAlguns valores precisam ser confirmados." : "";
+    const message = `Olá! Vim pelo aplicativo da AMG e gostaria de solicitar um orçamento:${customer}\n\n${products.join("\n")}${total}${note}\n\nPode confirmar os valores, a disponibilidade e a entrega?`;
+    await Browser.open({ url: `https://wa.me/${phone}?text=${encodeURIComponent(message)}` });
+  };
+
+  return (
+    <>
+      <header className="topbar"><Logo /><span className="result-count">{items.length} {items.length === 1 ? "produto" : "produtos"}</span></header>
+      <main className="screen cart-screen">
+        <div className="cart-title"><div><span className="eyebrow dark">Seu pedido</span><h1>Carrinho de orçamento</h1></div>{items.length ? <button type="button" onClick={clear}>Limpar</button> : null}</div>
+        {!items.length ? (
+          <div className="empty-cart"><div><CartIcon /></div><h2>Seu carrinho está vazio</h2><p>Adicione os produtos que você deseja e envie a lista completa para a AMG.</p><button type="button" onClick={() => goTo("catalogo")}>Ver produtos</button></div>
+        ) : (
+          <>
+            <div className="cart-list">
+              {items.map(({ product, quantity }) => (
+                <article className="cart-item" key={product.id}>
+                  <button className="cart-item-image" type="button" onClick={() => goTo(`produto/${product.slug}`)}><ProductImage product={product}/></button>
+                  <div className="cart-item-info">
+                    <h2>{product.name}</h2>
+                    <strong>{product.priceCents > 0 ? money(product.priceCents) : "Preço sob consulta"}</strong>
+                    <div className="quantity-row">
+                      <div className="quantity-control">
+                        <button type="button" aria-label="Diminuir quantidade" onClick={() => changeQuantity(product.id, quantity - 1)}>−</button>
+                        <span>{quantity}</span>
+                        <button type="button" aria-label="Aumentar quantidade" onClick={() => changeQuantity(product.id, quantity + 1)}>+</button>
+                      </div>
+                      <button className="remove-item" type="button" aria-label={`Remover ${product.name}`} onClick={() => remove(product.id)}><TrashIcon /></button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <section className="cart-summary">
+              <div><span>{hasPriceOnRequest ? "Total parcial" : "Total estimado"}</span><strong>{knownTotal > 0 ? money(knownTotal) : "Sob consulta"}</strong></div>
+              {hasPriceOnRequest ? <p>Os itens sem preço serão confirmados pela equipe da AMG.</p> : null}
+              <button type="button" disabled={!catalog?.whatsappPhone} onClick={() => void sendQuote()}>Enviar orçamento pelo WhatsApp</button>
+              <small>O envio da lista não confirma o pedido. A AMG verificará valores, estoque e entrega.</small>
+            </section>
+          </>
+        )}
+      </main>
+    </>
+  );
+}
+
+function BottomNav({ active, cartCount }: { active: Tab; cartCount: number }) {
   const items: { id: Tab; label: string; icon: typeof HomeIcon }[] = [
     { id: "inicio", label: "Início", icon: HomeIcon },
     { id: "catalogo", label: "Produtos", icon: GridIcon },
     { id: "favoritos", label: "Favoritos", icon: HeartIcon },
+    { id: "carrinho", label: "Carrinho", icon: CartIcon },
     { id: "conta", label: "Conta", icon: UserIcon },
   ];
-  return <nav className="bottom-nav">{items.map(({ id, label, icon: Icon }) => <button type="button" key={id} className={active === id ? "active" : ""} onClick={() => goTo(id)}><Icon fill={active === id && id === "favoritos" ? "currentColor" : "none"}/><span>{label}</span></button>)}</nav>;
+  return <nav className="bottom-nav">{items.map(({ id, label, icon: Icon }) => <button type="button" key={id} className={active === id ? "active" : ""} onClick={() => goTo(id)}><span className="nav-icon"><Icon fill={active === id && id === "favoritos" ? "currentColor" : "none"}/>{id === "carrinho" && cartCount > 0 ? <b>{cartCount > 99 ? "99+" : cartCount}</b> : null}</span><span>{label}</span></button>)}</nav>;
 }
 
 export function App() {
@@ -453,6 +572,7 @@ export function App() {
   const [session, setSession] = useState<AuthSession | null>(() => getStoredSession());
   const [checkingAuth, setCheckingAuth] = useState(() => Boolean(getStoredSession()));
   const { favorites, toggle } = useFavorites();
+  const { cart, itemCount, add, changeQuantity, remove, clear } = useCart();
 
   const load = async () => {
     setLoading(true); setError("");
@@ -495,7 +615,7 @@ export function App() {
 
   const productSlug = route.startsWith("produto/") ? decodeURIComponent(route.slice("produto/".length)) : "";
   const product = productSlug ? catalog?.products.find((item) => item.slug === productSlug) : undefined;
-  const tab: Tab = route === "catalogo" || route === "favoritos" || route === "conta" ? route : "inicio";
+  const tab: Tab = route === "catalogo" || route === "favoritos" || route === "carrinho" || route === "conta" ? route : "inicio";
   const selectCategory = (slug: string) => { setSelectedCategory(slug); goTo("catalogo"); };
   const handleLogin = async (email: string, password: string) => {
     const nextSession = await login(email, password);
@@ -509,17 +629,18 @@ export function App() {
   };
 
   if (product) {
-    return <ProductScreen product={product} category={catalog?.categories.find((item) => item.id === product.categoryId) ?? null} whatsappPhone={catalog?.whatsappPhone ?? ""} favorite={favorites.includes(product.id)} toggleFavorite={() => toggle(product.id)}/>;
+    return <ProductScreen product={product} category={catalog?.categories.find((item) => item.id === product.categoryId) ?? null} whatsappPhone={catalog?.whatsappPhone ?? ""} favorite={favorites.includes(product.id)} cartQuantity={cart[product.id] ?? 0} toggleFavorite={() => toggle(product.id)} addToCart={() => add(product.id)}/>;
   }
 
   return (
     <div className="app-shell">
       {error && <div className="offline-banner"><span>{catalog ? "Mostrando o último catálogo salvo." : error}</span><button type="button" onClick={() => void load()}><RefreshIcon/> Tentar novamente</button></div>}
-      {tab === "inicio" && <HomeScreen catalog={catalog} loading={loading} favorites={favorites} toggleFavorite={toggle} selectCategory={selectCategory} session={session}/>}
-      {tab === "catalogo" && <CatalogScreen catalog={catalog} loading={loading} favorites={favorites} toggleFavorite={toggle} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}/>}
-      {tab === "favoritos" && <FavoritesScreen catalog={catalog} favorites={favorites} toggleFavorite={toggle}/>}
+      {tab === "inicio" && <HomeScreen catalog={catalog} loading={loading} favorites={favorites} cart={cart} toggleFavorite={toggle} addToCart={add} selectCategory={selectCategory} session={session}/>}
+      {tab === "catalogo" && <CatalogScreen catalog={catalog} loading={loading} favorites={favorites} cart={cart} toggleFavorite={toggle} addToCart={add} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}/>}
+      {tab === "favoritos" && <FavoritesScreen catalog={catalog} favorites={favorites} cart={cart} toggleFavorite={toggle} addToCart={add}/>}
+      {tab === "carrinho" && <CartScreen catalog={catalog} cart={cart} session={session} changeQuantity={changeQuantity} remove={remove} clear={clear}/>}
       {tab === "conta" && <AccountScreen session={session} checking={checkingAuth} onLogin={handleLogin} onLogout={handleLogout}/>}
-      <BottomNav active={tab}/>
+      <BottomNav active={tab} cartCount={itemCount}/>
     </div>
   );
 }
