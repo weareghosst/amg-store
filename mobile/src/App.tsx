@@ -36,11 +36,8 @@ import { useCart } from "./use-cart";
 
 type Tab = "inicio" | "catalogo" | "favoritos" | "carrinho" | "conta";
 
-function money(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
+function itemCountLabel(count: number) {
+  return `${count} ${count === 1 ? "item" : "itens"}`;
 }
 
 function currentRoute() {
@@ -108,8 +105,7 @@ function ProductCard({
   onToggleFavorite: () => void;
   onAddToCart: () => void;
 }) {
-  const priceOnRequest = product.priceCents <= 0;
-  const unavailable = !priceOnRequest && product.stock <= 0;
+  const unavailable = product.stock <= 0;
   return (
     <article
       className="product-card"
@@ -127,12 +123,7 @@ function ProductCard({
       </div>
       <div className="product-card-body">
         <h3>{product.name}</h3>
-        <div className="price-row">
-          {!priceOnRequest && product.comparePriceCents && product.comparePriceCents > product.priceCents ? (
-            <span className="old-price">{money(product.comparePriceCents)}</span>
-          ) : null}
-          <strong className={priceOnRequest ? "price-on-request" : undefined}>{priceOnRequest ? "Consulte pelo WhatsApp" : money(product.priceCents)}</strong>
-        </div>
+        <p className="quote-label">Solicite um orçamento</p>
         <button
           className={`add-cart-button ${cartQuantity ? "has-items" : ""}`}
           type="button"
@@ -438,11 +429,9 @@ function FavoritesScreen({ catalog, favorites, cart, toggleFavorite, addToCart }
 
 function ProductScreen({ product, category, whatsappPhone, favorite, cartQuantity, toggleFavorite, addToCart }: { product: Product; category: Category | null; whatsappPhone: string; favorite: boolean; cartQuantity: number; toggleFavorite: () => void; addToCart: () => void }) {
   const productUrl = `${API_URL}/produtos/${product.slug}`;
-  const priceOnRequest = product.priceCents <= 0;
-  const unavailable = !priceOnRequest && product.stock <= 0;
+  const unavailable = product.stock <= 0;
   const buy = async () => {
-    const priceLine = priceOnRequest ? "" : `\nPreço anunciado: ${money(product.priceCents)}`;
-    const message = `Olá! Vim pelo aplicativo da AMG e tenho interesse neste produto:\n\n${product.name}${product.sku ? ` (cód. ${product.sku})` : ""}${priceLine}\n${productUrl}\n\nPode me passar o preço e mais informações?`;
+    const message = `Olá! Vim pelo aplicativo da AMG e tenho interesse neste produto:\n\n${product.name}${product.sku ? ` (cód. ${product.sku})` : ""}\n${productUrl}\n\nPode me passar o preço e mais informações?`;
     const phone = whatsappPhone.replace(/\D/g, "");
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     await Browser.open({ url });
@@ -458,13 +447,13 @@ function ProductScreen({ product, category, whatsappPhone, favorite, cartQuantit
         {category && <span className="category-label">{category.name}</span>}
         {product.sku && <span className="sku">SKU {product.sku}</span>}
         <h1>{product.name}</h1>
-        <div className="detail-price">{!priceOnRequest && product.comparePriceCents && product.comparePriceCents > product.priceCents ? <span>{money(product.comparePriceCents)}</span> : null}<strong className={priceOnRequest ? "price-on-request" : undefined}>{priceOnRequest ? "Consulte o preço pelo WhatsApp" : money(product.priceCents)}</strong></div>
+        <p className="detail-quote-label">Adicione ao carrinho para solicitar valores e disponibilidade.</p>
         <button className="add-cart-detail" type="button" disabled={unavailable} onClick={() => {
           addToCart();
           void Haptics.impact({ style: ImpactStyle.Medium }).catch(() => undefined);
         }}><CartIcon /> {unavailable ? "Produto esgotado" : cartQuantity ? `Adicionar mais — ${cartQuantity} no carrinho` : "Adicionar ao carrinho"}</button>
         {cartQuantity ? <button className="view-cart-link" type="button" onClick={() => goTo("carrinho")}>Ver meu carrinho</button> : null}
-        <button className="whatsapp-cta secondary" type="button" disabled={!whatsappPhone || unavailable} onClick={() => void buy()}>{priceOnRequest ? "Consultar somente este produto" : "Comprar somente este produto"}</button>
+        <button className="whatsapp-cta secondary" type="button" disabled={!whatsappPhone || unavailable} onClick={() => void buy()}>Consultar somente este produto</button>
         <div className="delivery-card"><span>🚚</span><div><strong>Entrega e retirada</strong><p>Entrega própria em São Paulo ou retirada na loja. Outros estados sob consulta.</p></div></div>
         {product.description && <section className="description"><h2>Sobre o produto</h2><p>{product.description}</p></section>}
       </div>
@@ -490,12 +479,6 @@ function CartScreen({
   const items = (catalog?.products ?? [])
     .filter((product) => Boolean(cart[product.id]))
     .map((product) => ({ product, quantity: cart[product.id] }));
-  const knownTotal = items.reduce(
-    (total, item) => total + (item.product.priceCents > 0 ? item.product.priceCents * item.quantity : 0),
-    0,
-  );
-  const hasPriceOnRequest = items.some((item) => item.product.priceCents <= 0);
-
   const sendQuote = async () => {
     const phone = (catalog?.whatsappPhone ?? "").replace(/\D/g, "");
     if (!phone || !items.length) return;
@@ -503,11 +486,7 @@ function CartScreen({
       `• ${quantity}x ${product.name}${product.sku ? ` (cód. ${product.sku})` : ""}`,
     );
     const customer = session ? `\nNome: ${session.user.name}` : "";
-    const total = knownTotal > 0
-      ? `\n\n${hasPriceOnRequest ? "Total parcial dos itens com preço" : "Total estimado"}: ${money(knownTotal)}`
-      : "";
-    const note = hasPriceOnRequest ? "\nAlguns valores precisam ser confirmados." : "";
-    const message = `Olá! Vim pelo aplicativo da AMG e gostaria de solicitar um orçamento:${customer}\n\n${products.join("\n")}${total}${note}\n\nPode confirmar os valores, a disponibilidade e a entrega?`;
+    const message = `Olá! Vim pelo aplicativo da AMG e gostaria de solicitar um orçamento:${customer}\n\n${products.join("\n")}\n\nPode confirmar os valores, a disponibilidade e a entrega?`;
     await Browser.open({ url: `https://wa.me/${phone}?text=${encodeURIComponent(message)}` });
   };
 
@@ -526,7 +505,7 @@ function CartScreen({
                   <button className="cart-item-image" type="button" onClick={() => goTo(`produto/${product.slug}`)}><ProductImage product={product}/></button>
                   <div className="cart-item-info">
                     <h2>{product.name}</h2>
-                    <strong>{product.priceCents > 0 ? money(product.priceCents) : "Preço sob consulta"}</strong>
+                    <strong>Orçamento pelo WhatsApp</strong>
                     <div className="quantity-row">
                       <div className="quantity-control">
                         <button type="button" aria-label="Diminuir quantidade" onClick={() => changeQuantity(product.id, quantity - 1)}>−</button>
@@ -540,8 +519,8 @@ function CartScreen({
               ))}
             </div>
             <section className="cart-summary">
-              <div><span>{hasPriceOnRequest ? "Total parcial" : "Total estimado"}</span><strong>{knownTotal > 0 ? money(knownTotal) : "Sob consulta"}</strong></div>
-              {hasPriceOnRequest ? <p>Os itens sem preço serão confirmados pela equipe da AMG.</p> : null}
+              <div><span>Resumo</span><strong>{itemCountLabel(items.reduce((total, item) => total + item.quantity, 0))}</strong></div>
+              <p>Os valores serão informados pela equipe da AMG no atendimento.</p>
               <button type="button" disabled={!catalog?.whatsappPhone} onClick={() => void sendQuote()}>Enviar orçamento pelo WhatsApp</button>
               <small>O envio da lista não confirma o pedido. A AMG verificará valores, estoque e entrega.</small>
             </section>

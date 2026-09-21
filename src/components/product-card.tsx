@@ -2,16 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatBRL } from "@/lib/money";
 import type { Product } from "@/db/schema";
+import { AddToQuote } from "@/components/add-to-quote";
 
 export function ProductCard({ product }: { product: Product }) {
   const priceOnRequest = product.priceCents <= 0;
   const outOfStock = !priceOnRequest && product.stock <= 0;
   return (
-    <Link
-      href={`/produtos/${product.slug}`}
-      className="group card-hover flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] hover:border-brand-blue/40"
-    >
-      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+    <article className="group card-hover flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] hover:border-brand-blue/40">
+      <Link href={`/produtos/${product.slug}`} className="relative block aspect-square overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
         {product.imageUrl ? (
           <Image
             src={product.imageUrl}
@@ -36,11 +34,9 @@ export function ProductCard({ product }: { product: Product }) {
         <span className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-blue shadow-sm opacity-0 transition duration-300 motion-safe:group-hover:opacity-100">
           Ver mais
         </span>
-      </div>
+      </Link>
       <div className="flex flex-1 flex-col gap-1 p-3.5">
-        <h3 className="line-clamp-2 text-sm font-semibold text-slate-800 transition motion-safe:group-hover:text-brand-blue">
-          {product.name}
-        </h3>
+        <Link href={`/produtos/${product.slug}`} className="line-clamp-2 text-sm font-semibold text-slate-800 transition motion-safe:group-hover:text-brand-blue">{product.name}</Link>
         <div className="mt-auto pt-1">
           {!priceOnRequest && product.comparePriceCents && product.comparePriceCents > product.priceCents && (
             <span className="mr-2 text-xs text-slate-400 line-through">
@@ -51,7 +47,8 @@ export function ProductCard({ product }: { product: Product }) {
             {priceOnRequest ? "Consulte pelo WhatsApp" : formatBRL(product.priceCents)}
           </span>
         </div>
+        <AddToQuote product={{ id: product.id, name: product.name, slug: product.slug, sku: product.sku, imageUrl: product.imageUrl, priceCents: product.priceCents, stock: product.stock }} />
       </div>
-    </Link>
+    </article>
   );
 }

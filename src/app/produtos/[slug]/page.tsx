@@ -6,6 +6,7 @@ import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { formatBRL } from "@/lib/money";
 import { WhatsAppBuy } from "@/components/whatsapp-buy";
+import { AddToQuote } from "@/components/add-to-quote";
 import {
   combinarCategorias,
   combinarProdutos,
@@ -112,6 +113,19 @@ export default async function ProductPage({
               slug: product.slug,
               name: product.name,
               sku: product.sku,
+              priceCents: product.priceCents,
+              stock: product.stock,
+            }}
+          />
+
+          <AddToQuote
+            full
+            product={{
+              id: product.id,
+              slug: product.slug,
+              name: product.name,
+              sku: product.sku,
+              imageUrl: product.imageUrl,
               priceCents: product.priceCents,
               stock: product.stock,
             }}

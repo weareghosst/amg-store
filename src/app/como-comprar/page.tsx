@@ -48,9 +48,12 @@ export default async function ComoComprarPage() {
               categorias disponíveis.
             </li>
             <li>
-              No produto de interesse, clique em{" "}
-              <strong>&quot;Comprar pelo WhatsApp&quot;</strong>. Isso abrirá
-              uma conversa com a nossa equipe já levando o nome do produto.
+              Clique em <strong>&quot;Adicionar ao orçamento&quot;</strong> nos
+              produtos desejados e ajuste as quantidades na sua lista.
+            </li>
+            <li>
+              Abra <strong>&quot;Orçamento&quot;</strong> no topo do site e envie a
+              lista completa pelo WhatsApp.
             </li>
             <li>
               <strong>Converse com a gente</strong>: confirmamos preço, estoque
