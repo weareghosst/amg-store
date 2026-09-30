@@ -20,7 +20,10 @@ async function authRequest<T>(path: string, init: RequestInit = {}): Promise<T> 
 }
 
 export async function getCatalog(signal?: AbortSignal): Promise<CatalogResponse> {
-  const response = await fetch(`${API_URL}/api/mobile/catalog?limite=100`, { signal });
+  const response = await fetch(`${API_URL}/api/mobile/catalog?limite=1000`, {
+    signal,
+    cache: "no-store",
+  });
   if (!response.ok) throw new Error("Não foi possível carregar o catálogo.");
   const catalog = (await response.json()) as CatalogResponse;
   localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(catalog));

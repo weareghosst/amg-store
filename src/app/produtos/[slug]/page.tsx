@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
@@ -11,16 +13,11 @@ import {
   combinarCategorias,
   combinarProdutos,
 } from "@/data/produtos-recebidos";
+import { absoluteSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-
+const carregarProduto = cache(async (slug: string) => {
   let productList: (typeof products.$inferSelect)[] = [];
   let categoryList: (typeof categories.$inferSelect)[] = [];
   try {
@@ -41,12 +38,93 @@ export default async function ProductPage({
   const product = combinarProdutos(productList, categoryList).find(
     (item) => item.slug === slug,
   );
+  const category = product
+    ? categoryList.find((item) => item.id === product.categoryId) ?? null
+    : null;
+
+  return { product, category };
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const { product } = await carregarProduto(slug);
+  if (!product) return { title: "Produto não encontrado" };
+
+  const description = product.description.slice(0, 160) ||
+    `Consulte informações e disponibilidade de ${product.name} na AMG.`;
+  const images = product.imageUrl && !product.imageUrl.startsWith("data:")
+    ? [{ url: product.imageUrl, alt: product.name }]
+    : undefined;
+
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical: `/produtos/${product.slug}` },
+    openGraph: {
+      type: "website",
+      title: product.name,
+      description,
+      url: `/produtos/${product.slug}`,
+      images,
+    },
+    twitter: {
+      card: images ? "summary_large_image" : "summary",
+      title: product.name,
+      description,
+      images,
+    },
+  };
+}
+
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const { product, category } = await carregarProduto(slug);
   if (!product) notFound();
-  const category = categoryList.find((item) => item.id === product.categoryId) ?? null;
   const priceOnRequest = product.priceCents <= 0;
+  const productUrl = absoluteSiteUrl(`/produtos/${product.slug}`);
+  const imageUrl = product.imageUrl && !product.imageUrl.startsWith("data:")
+    ? absoluteSiteUrl(product.imageUrl)
+    : undefined;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || undefined,
+    image: imageUrl,
+    sku: product.sku || undefined,
+    category: category?.name,
+    url: productUrl,
+    ...(product.priceCents > 0
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: productUrl,
+            priceCurrency: "BRL",
+            price: (product.priceCents / 100).toFixed(2),
+            availability: product.stock > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          },
+        }
+      : {}),
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+        }}
+      />
       <nav className="mb-4 text-sm text-slate-500">
         <Link href="/produtos" className="hover:text-brand-blue">
           Produtos

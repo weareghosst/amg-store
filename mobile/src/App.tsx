@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
@@ -33,6 +33,7 @@ import {
 import type { AuthSession, CatalogResponse, Category, Product } from "./types";
 import { useFavorites } from "./use-favorites";
 import { useCart } from "./use-cart";
+import { correspondeBusca } from "./search";
 
 type Tab = "inicio" | "catalogo" | "favoritos" | "carrinho" | "conta";
 
@@ -389,11 +390,12 @@ function CatalogScreen({
 }) {
   const [query, setQuery] = useState("");
   const products = useMemo(() => {
-    const normalized = query.trim().toLocaleLowerCase("pt-BR");
     return (catalog?.products ?? []).filter((product) => {
       const inCategory = !selectedCategory || product.categoryId === catalog?.categories.find((category) => category.slug === selectedCategory)?.id;
-      const searchable = `${product.name} ${product.description} ${product.sku ?? ""}`.toLocaleLowerCase("pt-BR");
-      return inCategory && (!normalized || searchable.includes(normalized));
+      return inCategory && correspondeBusca(
+        `${product.name} ${product.description} ${product.sku ?? ""}`,
+        query,
+      );
     });
   }, [catalog, query, selectedCategory]);
 
@@ -550,12 +552,16 @@ export function App() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [session, setSession] = useState<AuthSession | null>(() => getStoredSession());
   const [checkingAuth, setCheckingAuth] = useState(() => Boolean(getStoredSession()));
+  const lastCatalogUpdate = useRef(0);
   const { favorites, toggle } = useFavorites();
   const { cart, itemCount, add, changeQuantity, remove, clear } = useCart();
 
   const load = async () => {
     setLoading(true); setError("");
-    try { setCatalog(await getCatalog()); }
+    try {
+      setCatalog(await getCatalog());
+      lastCatalogUpdate.current = Date.now();
+    }
     catch (reason) { setError(reason instanceof Error ? reason.message : "Erro ao carregar o catálogo."); }
     finally { setLoading(false); }
   };
@@ -566,7 +572,10 @@ export function App() {
     window.addEventListener("hashchange", onHashChange);
     const controller = new AbortController();
     getCatalog(controller.signal)
-      .then((nextCatalog) => setCatalog(nextCatalog))
+      .then((nextCatalog) => {
+        setCatalog(nextCatalog);
+        lastCatalogUpdate.current = Date.now();
+      })
       .catch((reason: unknown) => {
         if (reason instanceof DOMException && reason.name === "AbortError") return;
         setError(reason instanceof Error ? reason.message : "Erro ao carregar o catálogo.");
@@ -589,7 +598,16 @@ export function App() {
       else if (activeRoute !== "inicio") goTo("inicio");
       else if (!canGoBack) void CapacitorApp.exitApp();
     });
-    return () => { controller.abort(); window.removeEventListener("hashchange", onHashChange); void backListener.then((handle) => handle.remove()); };
+    const stateListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+      const catalogIsStale = Date.now() - lastCatalogUpdate.current >= 5 * 60 * 1000;
+      if (isActive && catalogIsStale) void load();
+    });
+    return () => {
+      controller.abort();
+      window.removeEventListener("hashchange", onHashChange);
+      void backListener.then((handle) => handle.remove());
+      void stateListener.then((handle) => handle.remove());
+    };
   }, []);
 
   const productSlug = route.startsWith("produto/") ? decodeURIComponent(route.slice("produto/".length)) : "";

@@ -39,8 +39,7 @@ export default async function CategoryPage({
         .select()
         .from(products)
         .where(eq(products.active, true))
-        .orderBy(desc(products.createdAt))
-        .limit(200),
+        .orderBy(desc(products.createdAt)),
       db.select().from(categories).orderBy(categories.position),
     ]);
   } catch (err) {
@@ -56,13 +55,12 @@ export default async function CategoryPage({
       .filter((category) => includedSlugs.has(category.slug))
       .map((category) => category.id),
   );
-  const visibleProductList = (
+  const visibleProductList =
     slug === "todos-produtos"
       ? productList
       : productList.filter((product) =>
           product.categoryId ? includedCategoryIds.has(product.categoryId) : false,
-        )
-  ).slice(0, 60);
+        );
 
   return (
     <div>

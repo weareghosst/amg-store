@@ -7,6 +7,7 @@ import {
   combinarCategorias,
   combinarProdutos,
 } from "@/data/produtos-recebidos";
+import { correspondeBusca } from "@/lib/search";
 
 export const dynamic = "force-dynamic";
 
@@ -34,8 +35,7 @@ export default async function ProductsPage({
       .select()
       .from(products)
       .where(eq(products.active, true))
-      .orderBy(desc(products.createdAt))
-      .limit(200);
+      .orderBy(desc(products.createdAt));
   } catch (err) {
     console.error("[produtos] banco indisponível:", err);
   }
@@ -44,16 +44,14 @@ export default async function ProductsPage({
   productList = combinarProdutos(productList, categoryList);
 
   const activeCategory = categoryList.find((c) => c.slug === categorySlug);
-  const termo = q.trim().toLocaleLowerCase("pt-BR");
   productList = productList
     .filter((produto) => !activeCategory || produto.categoryId === activeCategory.id)
-    .filter((produto) => {
-      if (!termo) return true;
-      return `${produto.name} ${produto.description} ${produto.sku ?? ""}`
-        .toLocaleLowerCase("pt-BR")
-        .includes(termo);
-    })
-    .slice(0, 60);
+    .filter((produto) =>
+      correspondeBusca(
+        `${produto.name} ${produto.description} ${produto.sku ?? ""}`,
+        q,
+      ),
+    );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
