@@ -25,6 +25,9 @@ export const CATEGORY_PAGES: Record<string, CategoryPageConfig> = {
       "Produtos para manter ambientes limpos, organizados e bem cuidados: químicos, descartáveis e itens para sua rotina.",
     background: "/background-limpeza&higiene.png",
     includedCategorySlugs: [
+      "odorizantes-ambientes",
+      "sabonetes-liquidos",
+      "difusores-aromas",
       "limpadores-perfumados",
       "limpadores-multiuso",
       "desinfetantes",

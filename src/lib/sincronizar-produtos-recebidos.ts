@@ -9,7 +9,7 @@ import {
 } from "@/data/produtos-recebidos";
 
 const CHAVE_VERSAO = "catalogo_produtos_recebidos_versao";
-const VERSAO_ATUAL = "2026-09-17-fotos-estoque-10";
+const VERSAO_ATUAL = "2026-10-13-quarta-leva";
 
 export interface ResultadoSincronizacao {
   adicionados: number;
