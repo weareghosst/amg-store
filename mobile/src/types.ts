@@ -16,6 +16,7 @@ export type Product = {
   stock: number;
   categoryId: string | null;
   imageUrl: string | null;
+  imageUrls?: string[];
 };
 
 export type CatalogResponse = {

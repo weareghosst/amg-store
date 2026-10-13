@@ -13,7 +13,9 @@ import {
   categoryFormSchema,
   firstZodError,
   productFormSchema,
+  galleryImagesSchema,
 } from "@/lib/validation/schemas";
+import { saveProductGallery } from "@/lib/product-gallery";
 import { saveStoreSettings, storeSettingsSchema } from "@/lib/settings";
 import { sincronizarProdutosRecebidos } from "@/lib/sincronizar-produtos-recebidos";
 
@@ -80,6 +82,11 @@ export async function createProductAction(
   const admin = await assertAdmin();
   const parsed = parseProductForm(formData);
   if ("error" in parsed) return { error: parsed.error };
+  const gallery = galleryImagesSchema.safeParse(formData.getAll("galleryImage").map(String).filter(Boolean));
+  if (!gallery.success) return { error: firstZodError(gallery.error) };
+  if ([parsed.data.imageUrl ?? "", ...gallery.data].reduce((total, url) => total + (url.startsWith("data:") ? url.length : 0), 0) > 2.5 * 1024 * 1024 * 1.37) {
+    return { error: "As fotos enviadas, incluindo a capa, devem ter no máximo 2,5 MB no total. Reduza os arquivos ou use links." };
+  }
 
   const db = getDb();
   const existing = await db
@@ -89,7 +96,8 @@ export async function createProductAction(
     .limit(1);
   if (existing.length > 0) return { error: "Já existe um produto com este slug." };
 
-  const [product] = await db
+  const product = await db.transaction(async (tx) => {
+    const [created] = await tx
     .insert(products)
     .values({
       ...parsed.data,
@@ -97,6 +105,9 @@ export async function createProductAction(
       imageUrl: parsed.data.imageUrl || null,
     })
     .returning({ id: products.id });
+    await saveProductGallery(created.id, gallery.data, tx);
+    return created;
+  });
 
   await audit({
     userId: admin.id,
@@ -120,6 +131,11 @@ export async function updateProductAction(
   if (!idParsed.success) return { error: "Produto inválido." };
   const parsed = parseProductForm(formData);
   if ("error" in parsed) return { error: parsed.error };
+  const gallery = galleryImagesSchema.safeParse(formData.getAll("galleryImage").map(String).filter(Boolean));
+  if (!gallery.success) return { error: firstZodError(gallery.error) };
+  if ([parsed.data.imageUrl ?? "", ...gallery.data].reduce((total, url) => total + (url.startsWith("data:") ? url.length : 0), 0) > 2.5 * 1024 * 1024 * 1.37) {
+    return { error: "As fotos enviadas, incluindo a capa, devem ter no máximo 2,5 MB no total. Reduza os arquivos ou use links." };
+  }
 
   const db = getDb();
   const conflict = await db
@@ -129,7 +145,8 @@ export async function updateProductAction(
     .limit(1);
   if (conflict.length > 0) return { error: "Já existe outro produto com este slug." };
 
-  await db
+  await db.transaction(async (tx) => {
+    await tx
     .update(products)
     .set({
       ...parsed.data,
@@ -138,6 +155,8 @@ export async function updateProductAction(
       updatedAt: new Date(),
     })
     .where(eq(products.id, idParsed.data));
+    await saveProductGallery(idParsed.data, gallery.data, tx);
+  });
 
   await audit({
     userId: admin.id,

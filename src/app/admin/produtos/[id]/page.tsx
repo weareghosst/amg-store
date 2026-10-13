@@ -5,6 +5,7 @@ import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth/guards";
 import { ProductForm } from "@/components/admin/product-form";
+import { getProductGalleries } from "@/lib/product-gallery";
 
 export const metadata = { title: "Editar produto — Admin" };
 
@@ -38,6 +39,7 @@ export default async function EditProductPage({
   }
 
   if (!product) notFound();
+  const gallery = (await getProductGalleries([product])).get(product.id) ?? [];
 
   return (
     <div>
@@ -55,6 +57,7 @@ export default async function EditProductPage({
           stock: product.stock,
           categoryId: product.categoryId ?? "",
           imageUrl: product.imageUrl ?? "",
+          galleryImages: gallery.filter((url) => url !== product.imageUrl),
           active: product.active,
         }}
       />

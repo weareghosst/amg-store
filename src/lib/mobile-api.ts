@@ -1,4 +1,5 @@
 import type { Category, Product } from "@/db/schema";
+import { imagensRecebidas } from "@/data/galerias-produtos";
 
 export type MobileCategory = Pick<Category, "id" | "name" | "slug" | "position">;
 
@@ -14,7 +15,7 @@ export type MobileProduct = Pick<
   | "stock"
   | "categoryId"
   | "imageUrl"
->;
+> & { imageUrls: string[] };
 
 export function toMobileCategory(category: Category): MobileCategory {
   return {
@@ -25,7 +26,7 @@ export function toMobileCategory(category: Category): MobileCategory {
   };
 }
 
-export function toMobileProduct(product: Product): MobileProduct {
+export function toMobileProduct(product: Product, gallery?: string[]): MobileProduct {
   return {
     id: product.id,
     name: product.name,
@@ -37,6 +38,7 @@ export function toMobileProduct(product: Product): MobileProduct {
     stock: product.stock,
     categoryId: product.categoryId,
     imageUrl: product.imageUrl,
+    imageUrls: gallery ?? [...new Set([product.imageUrl, ...imagensRecebidas(product.slug)].filter((url): url is string => Boolean(url)))],
   };
 }
 

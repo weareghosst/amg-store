@@ -15,6 +15,7 @@ import {
 } from "@/data/produtos-recebidos";
 import { sincronizarProdutosRecebidos } from "@/lib/sincronizar-produtos-recebidos";
 import { correspondeBusca } from "@/lib/search";
+import { getProductGalleries } from "@/lib/product-gallery";
 
 export const dynamic = "force-dynamic";
 
@@ -66,10 +67,11 @@ export async function GET(request: NextRequest) {
     )
     .slice(0, limit);
 
+  const galleries = await getProductGalleries(productList);
   return NextResponse.json(
     {
       categories: allCategories.map(toMobileCategory),
-      products: productList.map(toMobileProduct),
+      products: productList.map((product) => toMobileProduct(product, galleries.get(product.id))),
       whatsappPhone: await getWhatsAppPhone(),
     },
     { headers: mobilePublicHeaders },

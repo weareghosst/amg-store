@@ -88,6 +88,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .detail-actions svg { width:20px; }
 .detail-image { position:relative; width:100%; aspect-ratio:1; background:linear-gradient(145deg,#f8fafc,#e7edf6); }
 .detail-image .stock-badge { top:auto; bottom:14px; left:16px; }
+.gallery-controls { position:absolute; left:14px; right:14px; bottom:14px; display:flex; align-items:center; justify-content:space-between; }
+.gallery-controls button { width:40px; height:40px; border-radius:50%; border:1px solid #e2e8f0; background:rgba(255,255,255,.95); color:#24324a; font-size:26px; }
+.gallery-controls span { border-radius:20px; background:rgba(255,255,255,.95); padding:6px 12px; font-size:12px; color:#475569; }
+.gallery-thumbnails { display:flex; gap:8px; overflow-x:auto; padding:12px 16px 0; }
+.gallery-thumbnails button { width:70px; height:70px; flex-shrink:0; padding:0; border:2px solid #e2e8f0; border-radius:9px; overflow:hidden; background:white; }
+.gallery-thumbnails button.active { border-color:#0a1f66; }
+.gallery-thumbnails img { width:100%; height:100%; object-fit:contain; display:block; }
 .detail-content { position:relative; margin-top:-20px; padding:25px 19px 10px; border-radius:24px 24px 0 0; background:#fff; }
 .category-label { display:inline-block; margin-right:7px; padding:6px 9px; border-radius:999px; color:var(--blue); background:#eef3ff; font-size:10px; font-weight:850; text-transform:uppercase; }
 .sku { color:#94a3b8; font-size:10px; font-weight:700; text-transform:uppercase; }

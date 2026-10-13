@@ -41,6 +41,18 @@ export const resetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
+export const productImageSchema = z.string().trim().max(3 * 1024 * 1024)
+  .refine((value) => value === "" || /^https:\/\/.+/i.test(value) ||
+    /^\/produtos\/[a-z0-9][a-z0-9._-]*$/i.test(value) ||
+    /^data:image\/(?:png|jpe?g|webp);base64,[a-z0-9+/]+=*$/i.test(value), {
+    message: "Use uma URL https:// ou uma foto PNG, JPG ou WebP.",
+  });
+
+export const galleryImagesSchema = z.array(productImageSchema).max(7, "Use até 7 fotos adicionais.")
+  .refine((images) => images.reduce((total, image) => total + (image.startsWith("data:") ? image.length : 0), 0) <= 2 * 1024 * 1024 * 1.37, {
+    message: "As fotos adicionais juntas devem ter no máximo 2 MB.",
+  });
+
 export const productFormSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome.").max(160),
   slug: z
@@ -57,14 +69,7 @@ export const productFormSchema = z.object({
   comparePriceCents: z.number().int().min(0).nullable(),
   stock: z.number().int().min(0, "Estoque não pode ser negativo."),
   categoryId: z.uuid().nullable(),
-  imageUrl: z
-    .string()
-    .trim()
-    .refine((v) => v === "" || /^https:\/\/.+/i.test(v) || /^data:image\/(?:png|jpe?g|webp);base64,/i.test(v), {
-      message: "Use uma URL https:// ou envie uma imagem PNG, JPG ou WebP do computador.",
-    })
-    .optional()
-    .or(z.literal("")),
+  imageUrl: productImageSchema.optional(),
   active: z.boolean(),
 });
 

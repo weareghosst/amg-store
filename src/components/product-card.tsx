@@ -3,12 +3,14 @@ import Link from "next/link";
 import { formatBRL } from "@/lib/money";
 import type { Product } from "@/db/schema";
 import { AddToQuote } from "@/components/add-to-quote";
+import { FavoriteButton } from "@/components/favorite-button";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({ product }: { product: Pick<Product, "id" | "name" | "slug" | "sku" | "imageUrl" | "priceCents" | "comparePriceCents" | "stock"> }) {
   const priceOnRequest = product.priceCents <= 0;
   const outOfStock = !priceOnRequest && product.stock <= 0;
   return (
-    <article className="group card-hover flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] hover:border-brand-blue/40">
+    <article className="group card-hover relative flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] hover:border-brand-blue/40">
+      <FavoriteButton id={product.id} name={product.name} />
       <Link href={`/produtos/${product.slug}`} className="relative block aspect-square overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
         {product.imageUrl ? (
           <Image

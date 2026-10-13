@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
@@ -14,6 +13,9 @@ import {
   combinarProdutos,
 } from "@/data/produtos-recebidos";
 import { absoluteSiteUrl } from "@/lib/site-url";
+import { ProductGallery } from "@/components/product-gallery";
+import { FavoriteButton } from "@/components/favorite-button";
+import { getProductGalleries } from "@/lib/product-gallery";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +90,7 @@ export default async function ProductPage({
   const { slug } = await params;
   const { product, category } = await carregarProduto(slug);
   if (!product) notFound();
+  const gallery = (await getProductGalleries([product])).get(product.id) ?? [];
   const priceOnRequest = product.priceCents <= 0;
   const productUrl = absoluteSiteUrl(`/produtos/${product.slug}`);
   const imageUrl = product.imageUrl && !product.imageUrl.startsWith("data:")
@@ -145,24 +148,7 @@ export default async function ProductPage({
       </nav>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          {product.imageUrl ? (
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-contain"
-              priority
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-slate-300">
-              <svg className="h-24 w-24" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
-              </svg>
-            </div>
-          )}
-        </div>
+        <ProductGallery key={product.id} images={gallery} name={product.name} />
 
         <div className="flex flex-col gap-4">
           <div>
@@ -173,6 +159,7 @@ export default async function ProductPage({
             )}
             <h1 className="mt-1 text-3xl font-bold text-slate-900">{product.name}</h1>
           </div>
+          <FavoriteButton id={product.id} name={product.name} full />
 
           <div className="flex items-baseline gap-3">
             {!priceOnRequest && product.comparePriceCents &&

@@ -430,6 +430,9 @@ function FavoritesScreen({ catalog, favorites, cart, toggleFavorite, addToCart }
 }
 
 function ProductScreen({ product, category, whatsappPhone, favorite, cartQuantity, toggleFavorite, addToCart }: { product: Product; category: Category | null; whatsappPhone: string; favorite: boolean; cartQuantity: number; toggleFavorite: () => void; addToCart: () => void }) {
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const photos = [...new Set([product.imageUrl, ...(product.imageUrls ?? [])].filter((url): url is string => Boolean(url)))];
+  const activePhoto = Math.min(photoIndex, Math.max(photos.length - 1, 0));
   const productUrl = `${API_URL}/produtos/${product.slug}`;
   const unavailable = product.stock <= 0;
   const buy = async () => {
@@ -444,7 +447,20 @@ function ProductScreen({ product, category, whatsappPhone, favorite, cartQuantit
   return (
     <main className="product-screen">
       <div className="detail-actions"><button type="button" onClick={() => history.back()} aria-label="Voltar"><ArrowLeftIcon/></button><div><button type="button" onClick={() => void share()} aria-label="Compartilhar"><ShareIcon/></button><FavoriteButton active={favorite} onClick={toggleFavorite}/></div></div>
-      <div className="detail-image"><ProductImage product={product}/>{unavailable && <span className="stock-badge">Esgotado</span>}</div>
+      <div className="detail-image">
+        <ProductImage product={{ ...product, imageUrl: photos[activePhoto] ?? null }}/>
+        {unavailable && <span className="stock-badge">Esgotado</span>}
+        {photos.length > 1 && <div className="gallery-controls">
+          <button type="button" aria-label="Foto anterior" onClick={() => setPhotoIndex((activePhoto - 1 + photos.length) % photos.length)}>‹</button>
+          <span aria-live="polite">{activePhoto + 1} de {photos.length}</span>
+          <button type="button" aria-label="Próxima foto" onClick={() => setPhotoIndex((activePhoto + 1) % photos.length)}>›</button>
+        </div>}
+      </div>
+      {photos.length > 1 && <div className="gallery-thumbnails" aria-label="Fotos do produto">
+        {photos.map((url, index) => <button key={url} type="button" aria-label={`Ver foto ${index + 1}`} aria-pressed={index === activePhoto} className={index === activePhoto ? "active" : ""} onClick={() => setPhotoIndex(index)}>
+          <ProductImage product={{ ...product, imageUrl: url }} />
+        </button>)}
+      </div>}
       <div className="detail-content">
         {category && <span className="category-label">{category.name}</span>}
         {product.sku && <span className="sku">SKU {product.sku}</span>}
@@ -626,7 +642,7 @@ export function App() {
   };
 
   if (product) {
-    return <ProductScreen product={product} category={catalog?.categories.find((item) => item.id === product.categoryId) ?? null} whatsappPhone={catalog?.whatsappPhone ?? ""} favorite={favorites.includes(product.id)} cartQuantity={cart[product.id] ?? 0} toggleFavorite={() => toggle(product.id)} addToCart={() => add(product.id)}/>;
+    return <ProductScreen key={product.id} product={product} category={catalog?.categories.find((item) => item.id === product.categoryId) ?? null} whatsappPhone={catalog?.whatsappPhone ?? ""} favorite={favorites.includes(product.id)} cartQuantity={cart[product.id] ?? 0} toggleFavorite={() => toggle(product.id)} addToCart={() => add(product.id)}/>;
   }
 
   return (

@@ -6,16 +6,18 @@ export function SubmitButton({
   children,
   className,
   pendingText = "Enviando...",
+  disabled = false,
 }: {
   children: React.ReactNode;
   className?: string;
   pendingText?: string;
+  disabled?: boolean;
 }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className={
         className ??
         "w-full rounded-lg bg-brand-blue px-4 py-2.5 font-semibold text-white transition hover:bg-brand-blue-dark disabled:opacity-50"

@@ -23,6 +23,7 @@ export interface ProductFormDefaults {
   stock: number;
   categoryId: string;
   imageUrl: string;
+  galleryImages?: string[];
   active: boolean;
 }
 
@@ -41,8 +42,37 @@ export function ProductForm({
   const [deleting, startDeleting] = useTransition();
   const [imageData, setImageData] = useState("");
   const [uploadError, setUploadError] = useState("");
+  const [galleryImages, setGalleryImages] = useState(defaults.galleryImages ?? []);
+  const [galleryError, setGalleryError] = useState("");
+  const [galleryUrl, setGalleryUrl] = useState("");
+  const [readingGallery, setReadingGallery] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+
+  async function addGalleryFiles(files: FileList | null) {
+    if (!files?.length) return;
+    setGalleryError("");
+    const selected = Array.from(files);
+    if (galleryImages.length + selected.length > 7) { setGalleryError("Use até 7 fotos adicionais."); return; }
+    if (selected.some((file) => !/^image\/(png|jpe?g|webp)$/i.test(file.type) || file.size > MAX_IMAGE_BYTES)) {
+      setGalleryError("Use PNG, JPG ou WebP com até 2 MB por foto."); return;
+    }
+    const existingBytes = galleryImages.reduce((total, image) => total + (image.startsWith("data:") ? image.length * .75 : 0), 0);
+    if (existingBytes + selected.reduce((total, file) => total + file.size, 0) > 2 * 1024 * 1024) {
+      setGalleryError("As fotos adicionais juntas devem ter no máximo 2 MB."); return;
+    }
+    setReadingGallery(true);
+    try {
+      const images = await Promise.all(selected.map((file) => new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Falha ao ler imagem."));
+        reader.readAsDataURL(file);
+      })));
+      setGalleryImages((current) => [...current, ...images]);
+    } catch { setGalleryError("Não foi possível ler as fotos. Tente novamente."); }
+    finally { setReadingGallery(false); }
+  }
 
   function handleFileChange(file: File | undefined) {
     setUploadError("");
@@ -195,6 +225,30 @@ export function ProductForm({
         </div>
       </div>
 
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+        <h2 className="font-semibold text-slate-800">Fotos adicionais</h2>
+        <p className="text-xs text-slate-500">A imagem acima é a capa. Adicione até 7 fotos: até 2 MB por foto, 2 MB nas adicionais e 2,5 MB incluindo a capa. Você também pode usar links.</p>
+        <div className="flex flex-wrap gap-3">
+          {galleryImages.map((url, index) => <div key={index} className="w-24">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt={`Foto adicional ${index + 1}`} className="h-24 w-24 rounded-lg border border-slate-200 object-contain" />
+            <input type="hidden" name="galleryImage" value={url} />
+            <button type="button" className="mt-1 text-xs text-red-600" disabled={readingGallery} onClick={() => setGalleryImages((current) => current.filter((_, i) => i !== index))}>Remover foto</button>
+          </div>)}
+        </div>
+        <input type="file" multiple accept="image/png,image/jpeg,image/webp" aria-label="Enviar fotos adicionais" disabled={readingGallery || galleryImages.length >= 7} onChange={(event) => { void addGalleryFiles(event.target.files); event.target.value = ""; }} className="block w-full text-sm text-slate-600" />
+        <div className="flex gap-2">
+          <input type="url" aria-label="Link de foto adicional" placeholder="Link https:// de uma foto adicional" value={galleryUrl} onChange={(event) => setGalleryUrl(event.target.value)} className={inputClass} />
+          <button type="button" disabled={readingGallery || galleryImages.length >= 7} className="rounded-lg border border-slate-300 px-3 text-sm text-brand-blue" onClick={() => {
+            if (!/^https:\/\/.+/i.test(galleryUrl.trim())) { setGalleryError("Informe um link https:// válido."); return; }
+            setGalleryImages((current) => [...new Set([...current, galleryUrl.trim()])]);
+            setGalleryUrl(""); setGalleryError("");
+          }}>Adicionar</button>
+        </div>
+        {readingGallery && <p className="text-sm text-slate-500" role="status">Preparando fotos...</p>}
+        {galleryError && <p className="text-sm text-red-600" role="alert">{galleryError}</p>}
+      </section>
+
       <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
         <input
           type="checkbox"
@@ -209,6 +263,7 @@ export function ProductForm({
 
       <div className="flex gap-3">
         <SubmitButton
+          disabled={readingGallery}
           className="rounded-lg bg-brand-blue px-6 py-2.5 font-semibold text-white transition hover:bg-brand-blue-dark disabled:opacity-50"
           pendingText="Salvando..."
         >

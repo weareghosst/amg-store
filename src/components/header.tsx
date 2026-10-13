@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { logoutAction } from "@/actions/auth";
 import { categoryHref } from "@/lib/category-pages";
 import { QuoteCartLink } from "@/components/quote-cart-link";
+import { FavoritesLink } from "@/components/favorites-link";
 
 // Usa o wordmark oficial se public/logo-header.png existir; caso contrário
 // mostra o texto estilizado nas cores da marca.
@@ -56,6 +57,7 @@ export async function Header() {
 
         <nav className="flex flex-wrap items-center justify-end gap-1.5">
           <QuoteCartLink />
+          <FavoritesLink />
           {user ? (
             <div className="flex flex-wrap items-center gap-1">
               <Link

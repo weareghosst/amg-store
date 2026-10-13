@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { categories, products } from "@/db/schema";
 import { getWhatsAppPhone } from "@/lib/whatsapp";
+import { getProductGalleries } from "@/lib/product-gallery";
 import {
   mobileOptionsResponse,
   mobilePublicHeaders,
@@ -64,9 +65,10 @@ export async function GET(
     ? allCategories.find((item) => item.id === product.categoryId) ?? null
     : null;
 
+  const gallery = (await getProductGalleries([product])).get(product.id);
   return NextResponse.json(
     {
-      product: toMobileProduct(product),
+      product: toMobileProduct(product, gallery),
       category: category ? toMobileCategory(category) : null,
       whatsappPhone: await getWhatsAppPhone(),
     },
