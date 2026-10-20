@@ -86,6 +86,32 @@ export async function Footer() {
             Atacado e varejo — Centro de Distribuição. Mostruário de produtos;
             compra e atendimento pelo WhatsApp.
           </p>
+          <a
+            href="https://www.instagram.com/amgsdistribuidora/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram da AMG: @amgsdistribuidora (abre em uma nova aba)"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-brand-green hover:text-brand-green focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-green"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="shrink-0"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.5" cy="6.5" r=".5" fill="currentColor" stroke="none" />
+            </svg>
+            @amgsdistribuidora
+          </a>
         </div>
 
         <div className="text-sm">
